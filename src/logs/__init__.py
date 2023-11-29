@@ -1,8 +1,31 @@
+"""
+Script name : __init__.py
+Date : 08/31/2023
+
+Description : This script is used to initialize the logger for the project.
+"""
+import os
+import sys
 import logging
+from datetime import datetime
 
-logging.basicConfig(level = logging.INFO)
+logs_path = os.path.join(os.getcwd(), './artifacts/logs')
 
-logger = logging.getLogger(__name__)
+os.makedirs(logs_path, exist_ok=True)
 
-ConsoleOutputHandler = logging.StreamHandler()
-logger.addHandler(ConsoleOutputHandler)
+LOG_FILE = f"{datetime.now().strftime('%d_%m_%Y')}.log"
+
+LOG_FILE_PATH = os.path.join(logs_path, LOG_FILE)
+
+logging_str = "[ %(asctime)s ] %(lineno)d %(name)s - %(levelname)s - %(message)s"
+
+logging.basicConfig(
+    format=logging_str,
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler(LOG_FILE_PATH, mode='a'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger("cnnClassifier")

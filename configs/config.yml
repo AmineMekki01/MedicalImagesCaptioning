@@ -18,12 +18,12 @@ model_config:
   emb_dropout: 0.1
 
 train_config:
-  epochs: 5
+  epochs: 40
   freeze_epochs_gpt: 1
   freeze_epochs_all: 2
-  learning_rate: 1e-2
+  learning_rate: 0.0004
   device: cuda
-  batch_size: 1
+  batch_size: 8
   training_data_path: './artifacts/data/processed/dataProcessed.csv'
   trained_model_output_path: './artifacts/models/trainedModel.pt'
   metrics_path: './artifacts/metrics/trainingMetrics.csv'

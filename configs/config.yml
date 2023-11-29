@@ -1,0 +1,30 @@
+data_processing_config:
+  processed_data_path: './artifacts/data/processed'
+  images_base_path: './artifacts/data/raw/images'
+  projections_path: './artifacts/data/raw/caption/indiana_projections.csv'
+  reports_path: './artifacts/data/raw/caption/indiana_reports.csv'
+  processed_data_output_path: './artifacts/data/processed/dataProcessed.csv'
+
+model_config:
+  vocab_size: 50257
+  embed_dim: 768
+  num_heads: 12
+  seq_len: 1024
+  depth: 12
+  attention_dropout: 0.1
+  residual_dropout: 0.1
+  mlp_ratio: 4
+  mlp_dropout: 0.1
+  emb_dropout: 0.1
+
+train_config:
+  epochs: 5
+  freeze_epochs_gpt: 1
+  freeze_epochs_all: 2
+  learning_rate: 1e-2
+  device: cuda
+  batch_size: 1
+  training_data_path: './artifacts/data/processed/dataProcessed.csv'
+  trained_model_output_path: './artifacts/models/trainedModel.pt'
+  metrics_path: './artifacts/metrics/trainingMetrics.csv'
+  metrics_folder_path: './artifacts/metrics/'

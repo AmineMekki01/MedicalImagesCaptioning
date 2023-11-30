@@ -3,7 +3,7 @@ import torch
 from src.logs import logger
 from src.config.configuration import ConfigurationManager
 from src.component.train import Trainer
-from src.utils.commonFunctions import split_data
+from src.utils.commonFunctions import split_data, save_splitted_data
 from src.component.chest_dataset import Dataset, collate_fn
 from src.component.imageTransform import train_tfms, valid_tfms
 
@@ -19,6 +19,7 @@ class ModelTrainingPipeline:
         model_config = config.get_model_config()
         dataframe = pd.read_csv(training_config.training_data_path, sep=';')
         train, validation, test = split_data(dataframe)
+        save_splitted_data(train, validation, test)
         train_dataset = Dataset(train, train_tfms)
         validation_dataset = Dataset(validation, valid_tfms)
 

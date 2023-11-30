@@ -4,11 +4,12 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class DataProcessingConfig:
-    processed_data_path : Path
+    processed_data_path: Path
     images_base_path: Path
     projections_data_path: str
     reports_data_path: Path
     processed_data_output_path: Path
+
 
 @dataclass(frozen=True)
 class TrainingConfig:
@@ -20,10 +21,11 @@ class TrainingConfig:
     epochs: int
     learning_rate: float
     freeze_epochs_gpt: int
-    freeze_epochs_all: int  
+    freeze_epochs_all: int
     device: str
-    
-@dataclass(frozen=True) 
+
+
+@dataclass(frozen=True)
 class ModelConfig:
     vocab_size: int
     embed_dim: int
@@ -35,3 +37,12 @@ class ModelConfig:
     mlp_ratio: int
     mlp_dropout: float
     emb_dropout: float
+
+
+@dataclass(frozen=True)
+class InferenceConfig:
+    trained_model_path: Path
+    inference_data_path: Path
+    metrics_folder_path: Path
+    metrics_path: Path
+    device: str

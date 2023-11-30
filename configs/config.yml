@@ -21,10 +21,19 @@ train_config:
   epochs: 40
   freeze_epochs_gpt: 1
   freeze_epochs_all: 2
-  learning_rate: 0.0004
+  learning_rate: 0.0001
   device: cuda
   batch_size: 8
   training_data_path: './artifacts/data/processed/dataProcessed.csv'
   trained_model_output_path: './artifacts/models/trainedModel.pt'
-  metrics_path: './artifacts/metrics/trainingMetrics.csv'
-  metrics_folder_path: './artifacts/metrics/'
+  metrics_path: './artifacts/metrics/train/trainingMetrics.csv'
+  metrics_folder_path: './artifacts/metrics/train/'
+
+inference_config:
+  trained_model_path: './artifacts/models/captioner.pt'
+  inference_data_path: './artifacts/data/processed/test.csv'
+  metrics_path: './artifacts/metrics/test/testMetrics.csv'
+  metrics_folder_path: './artifacts/metrics/test/'
+  device: cuda
+  temperature: 1.0
+

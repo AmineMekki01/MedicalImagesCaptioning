@@ -28,4 +28,4 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger("cnnClassifier")
+logger = logging.getLogger("MedicalImageCaptioning")

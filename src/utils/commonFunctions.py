@@ -21,7 +21,10 @@ from rouge import Rouge
 import nltk
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from nltk import word_tokenize
-nltk.download('punkt')
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
 
 
 @ensure_annotations
@@ -102,7 +105,7 @@ def split_data(data: pd.DataFrame, validation_size: float = 0.1, test_size: floa
     return train, validation, test
 
 
-def save_splitted_data(train: pd.DataFrame, validation: pd.DataFrame, test: pd.DataFrame):
+def save_splitted_data(train: pd.DataFrame, validation: pd.DataFrame, test: pd.DataFrame, processed_data_path: Path):
     """
     This function saves the splitted data into csv files.
 
@@ -119,10 +122,13 @@ def save_splitted_data(train: pd.DataFrame, validation: pd.DataFrame, test: pd.D
     -------
     None
     """
-    train.to_csv("./artifacts/data/processed/train.csv", index=False, sep=';')
-    validation.to_csv(
-        "./artifacts/data/processed/validation.csv", index=False, sep=';')
-    test.to_csv("./artifacts/data/processed/test.csv", index=False, sep=';')
+    logger.info(f"amine : {processed_data_path}")
+    train_path = processed_data_path / "train.csv"
+    test_path = processed_data_path / "test.csv"
+    validation_path = processed_data_path / "validation.csv"
+    train.to_csv(train_path, index=False, sep=';')
+    validation.to_csv(validation_path, index=False, sep=';')
+    test.to_csv(test_path, index=False, sep=';')
     logger.info("data splitted successfully.")
 
 
@@ -142,9 +148,18 @@ def evaluate_model_generator(reference_caption, generated_caption):
     cider_score, rouge1, rouge2, rougeL, bleu : float, float, float, float, float
         cider score, rouge1 score, rouge2 score, rougeL score and bleu score.
     """
-    rouge1, rouge2, rougeL = calculate_rouge_score(
-        reference_caption, generated_caption)
-    bleu_score = calculate_blue_score(reference_caption, generated_caption)
+    try:
+        rouge1, rouge2, rougeL = calculate_rouge_score(
+            reference_caption, generated_caption)
+    except Exception as e:
+        logger.error(e)
+        rouge1, rouge2, rougeL = 0, 0, 0
+    try:
+        bleu_score = calculate_blue_score(reference_caption, generated_caption)
+    except Exception as e:
+        logger.error(e)
+        bleu_score = 0
+
     return rouge1, rouge2, rougeL, bleu_score
 
 
@@ -200,3 +215,45 @@ def calculate_blue_score(generated_caption: str, reference_caption: str):
 
 def calculate_bert_score():
     pass
+
+
+def read_train_val_csv(train_csv_path: Path, val_csv_path: Path):
+    """
+    This function reads the train and validation csv files.
+
+    Parameters
+    ----------
+    train_csv_path : Path
+        path to the train csv file.
+    val_csv_path : Path
+        path to the validation csv file.
+
+    Returns
+    -------
+    train, validation : pd.DataFrame, pd.DataFrame
+        train and validation dataframes.
+    """
+    train = pd.read_csv(train_csv_path, sep=';')
+    validation = pd.read_csv(val_csv_path, sep=';')
+    return train, validation
+
+
+def create_image_path_column(images_directory_path: Path):
+    """
+    list all the paths in a directory and then create a dataframe with the image path column.
+    """
+    image_paths = list(images_directory_path.glob('*.jpg'))
+    image_paths = [str(path) for path in image_paths]
+    image_paths = pd.DataFrame(image_paths, columns=['image_path'])
+    return image_paths
+
+
+def filter_rows_of_missing_images(data: pd.DataFrame, images_directory_path: Path):
+    """
+    This function filters the rows of missing images.
+    """
+    image_paths = list(images_directory_path.glob('*.jpg'))
+    logger.info(f"ahmed : {image_paths[0]}")
+    image_paths = [str(path) for path in image_paths]
+    data = data[data['image_path'].isin(image_paths)]
+    return data

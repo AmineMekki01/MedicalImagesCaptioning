@@ -6,6 +6,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from transformers import GPT2TokenizerFast
 from src.component.model import VisionGPT2Model
+from src.logs import logger
 
 
 class Inference:
@@ -34,6 +35,8 @@ class Inference:
             self.inference_config.trained_model_path, map_location=torch.device(self.device)))
         self.model.to(device=self.device)
         self.model.eval()
+        logger.info(
+            f"Model in {self.inference_config.trained_model_path} loaded successfully")
 
     @torch.no_grad()
     def generate_caption(self, image, max_tokens=50, temperature=1.0, deterministic=False):

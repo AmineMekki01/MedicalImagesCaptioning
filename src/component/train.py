@@ -20,17 +20,23 @@ from src.logs import logger
 
 
 class Trainer:
-    def __init__(self, model_config, train_config, dls):
-
+    def __init__(self, model_config, train_config, model_output_path, dls, use_pretrained=False, fine_tune=False):
+        self.model_output_path = model_output_path
         self.train_config = train_config
         self.model_config = model_config
         self.device = self.train_config.device
         logger.info(f"cuda available: {torch.cuda.is_available()}")
-        self.model = VisionGPT2Model.from_pretrained(
-            model_config).to(self.device)
-        self.model.pretrained_layers_trainable(trainable=False)
 
-        print(
+        if use_pretrained:
+            self.model = VisionGPT2Model.from_pretrained(
+                model_config).to(self.device)
+        else:
+            self.model = VisionGPT2Model(model_config).to(
+                self.device)
+
+        self.model.pretrained_layers_trainable(trainable=not fine_tune)
+
+        logger.info(
             f'trainable parameters: {sum([p.numel() for p in self.model.parameters() if p.requires_grad])}')
 
         self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
@@ -64,13 +70,17 @@ class Trainer:
             ToTensorV2()
         ])
 
-    def save_model(self,):
-        self.train_config.model_path.mkdir(exist_ok=True)
+    def save_model(self, model_path_output=None):
+        if model_path_output is None:
+            model_path_output = self.model_output_path
+        self.train_config.trained_model_output_folder_path.mkdir(exist_ok=True)
         sd = self.model.state_dict()
-        torch.save(sd, self.train_config.model_path/'captioner.pt')
+        torch.save(sd, model_path_output)
 
-    def load_best_model(self,):
-        sd = torch.load(self.train_config.model_path/'captioner.pt')
+    def load_best_model(self, model_path_output=None):
+        if model_path_output is None:
+            model_path_output = self.model_output_path
+        sd = torch.load(model_path_output)
         self.model.load_state_dict(sd)
 
     def train_one_epoch(self, epoch):
@@ -170,7 +180,7 @@ class Trainer:
                 best_pxp = pxp
                 best_epoch = epoch
                 print('saving best model...')
-                self.save_model()
+                self.save_model(self.model_output_path)
 
         return {
             'best_perplexity': best_pxp,

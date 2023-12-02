@@ -1,9 +1,16 @@
-data_processing_config:
-  processed_data_path: './artifacts/data/processed'
-  images_base_path: './artifacts/data/raw/images'
-  projections_path: './artifacts/data/raw/caption/indiana_projections.csv'
-  reports_path: './artifacts/data/raw/caption/indiana_reports.csv'
-  processed_data_output_path: './artifacts/data/processed/dataProcessed.csv'
+ChestXray_data_processing_config:
+  processed_data_path: './artifacts/data/processed/caption/ChestXray'
+  images_base_path: './artifacts/data/raw/images/ChestXray'
+  projections_path: './artifacts/data/raw/caption/ChestXray/indiana_projections.csv'
+  reports_path: './artifacts/data/raw/caption/ChestXray/indiana_reports.csv'
+  processed_data_output_path: './artifacts/data/processed/caption/ChestXray/'
+  processed_first: False
+
+ROCO_data_processing_config:
+  raw_data_path: './artifacts/data/raw/caption/ROCO/'
+  processed_data_path: './artifacts/data/processed/caption/ROCO'
+  images_base_path: './artifacts/data/raw/images/ROCO'
+
 
 model_config:
   vocab_size: 50257
@@ -18,22 +25,43 @@ model_config:
   emb_dropout: 0.1
 
 train_config:
-  epochs: 40
-  freeze_epochs_gpt: 1
-  freeze_epochs_all: 2
-  learning_rate: 0.0001
-  device: cuda
-  batch_size: 8
-  training_data_path: './artifacts/data/processed/dataProcessed.csv'
-  trained_model_output_path: './artifacts/models/trainedModel.pt'
-  metrics_path: './artifacts/metrics/train/trainingMetrics.csv'
-  metrics_folder_path: './artifacts/metrics/train/'
+  training_params:
+    epochs: 20
+    learning_rate: 0.0001
+    device: cuda
+    batch_size: 4
+    freeze_epochs_gpt: 1
+    freeze_epochs_all: 2
+    general_specific_fine_tuning: True
+
+  ChestXray:
+    train_data_path: './artifacts/data/processed/caption/ChestXray/train.csv'
+    val_data_path: './artifacts/data/processed/caption/ChestXray/validation.csv'
+    test_data_path: './artifacts/data/processed/caption/ChestXray/test.csv'
+    training_data_path: './artifacts/data/processed/caption/ChestXray/dataProcessed.csv'
+    trained_model_output_folder_path: './artifacts/models/ChestXray/'
+    roco_trained_model_path: './artifacts/models/ROCO/trainedModel.pt'
+    trained_model_output_path: './artifacts/models/ChestXray/trainedModel.pt'
+    metrics_path: './artifacts/metrics/ChestXray/train/trainingMetrics.csv'
+    metrics_folder_path: './artifacts/metrics/ChestXray/train/'
+    processed_data_path: './artifacts/data/processed/caption/ChestXray'
+
+  ROCO:
+    train_data_path: './artifacts/data/processed/caption/ROCO/train.csv'
+    val_data_path: './artifacts/data/processed/caption/ROCO/validation.csv'
+    test_data_path: './artifacts/data/processed/caption/ROCO/test.csv'
+    trained_model_output_folder_path: './artifacts/models/ROCO/'
+    trained_model_output_path: './artifacts/models/ROCO/trainedModel.pt'
+    metrics_path: './artifacts/metrics/ROCO/train/trainingMetrics.csv'
+    metrics_folder_path: './artifacts/metrics/ROCO/train/'
+    processed_data_path: './artifacts/data/processed/caption/ROCO'
+
 
 inference_config:
   trained_model_path: './artifacts/models/captioner.pt'
-  inference_data_path: './artifacts/data/processed/test.csv'
-  metrics_path: './artifacts/metrics/test/testMetrics.csv'
-  metrics_folder_path: './artifacts/metrics/test/'
+  inference_data_path: './artifacts/data/processed/ChestXray/test.csv'
+  metrics_path: './artifacts/metrics/test/ChestXray/testMetrics.csv'
+  metrics_folder_path: './artifacts/metrics/test/ChestXray/'
   device: cuda
   temperature: 1.0
 

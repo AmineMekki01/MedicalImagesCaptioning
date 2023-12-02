@@ -31,12 +31,12 @@ if __name__ == "__main__":
         logger.exception(e)
         raise e
 
-    try:
-        logger.info(f">>>>> Stage {STAGE_NAME3} started <<<<<")
-        inference = InferencePipeline()
-        inference.run()
-        logger.info(f">>>>> Stage {STAGE_NAME3} completed. <<<<< \n")
+    # try:
+    #     logger.info(f">>>>> Stage {STAGE_NAME3} started <<<<<")
+    #     inference = InferencePipeline()
+    #     inference.run()
+    #     logger.info(f">>>>> Stage {STAGE_NAME3} completed. <<<<< \n")
 
-    except Exception as e:
-        logger.exception(e)
-        raise e
+    # except Exception as e:
+    #     logger.exception(e)
+    #     raise e

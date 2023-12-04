@@ -73,7 +73,6 @@ class Trainer:
     def save_model(self, model_path_output=None):
         if model_path_output is None:
             model_path_output = self.model_output_path
-        self.train_config.trained_model_output_folder_path.mkdir(exist_ok=True)
         sd = self.model.state_dict()
         torch.save(sd, model_path_output)
 

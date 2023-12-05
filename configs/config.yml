@@ -26,7 +26,7 @@ model_config:
 
 train_config:
   training_params:
-    epochs: 20
+    epochs: 1
     learning_rate: 0.0001
     device: cuda
     batch_size: 4
@@ -58,10 +58,10 @@ train_config:
 
 
 inference_config:
-  trained_model_path: './artifacts/models/captioner.pt'
-  inference_data_path: './artifacts/data/processed/ChestXray/test.csv'
+  trained_model_path: './artifacts/models/second_stage_model.pth'
+  inference_data_path: './artifacts/data/processed/caption/ChestXray/test.csv'
   metrics_path: './artifacts/metrics/test/ChestXray/testMetrics.csv'
   metrics_folder_path: './artifacts/metrics/test/ChestXray/'
-  device: cuda
+  device: gpu
   temperature: 1.0
 

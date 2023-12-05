@@ -10,38 +10,39 @@ from src.utils.commonFunctions import evaluate_model_generator
 
 
 class InferencePipeline:
-    def __init__(self):
+    def __init__(self, batch_size=4):
+        self.batch_size = batch_size
         self.metrics: pd.DataFrame = pd.DataFrame(
             columns=['image_path', 'True Caption', 'Generated caption', 'rouge1', 'rouge2', 'rougeL', 'bleu', 'temperature', 'deterministic'])
-
+        
     def run(self):
         config = ConfigurationManager()
         inference_config = config.get_inference_config()
         model_config = config.get_model_config()
         test_data = pd.read_csv(inference_config.inference_data_path, sep=';')
         inference = Inference(model_config, inference_config)
+        
+        if self.batch_size > len(test_data):
+            self.batch_size = len(test_data)
+            
+        for start_idx in range(0, len(test_data), self.batch_size):
+            end_idx = min(start_idx + self.batch_size, len(test_data))
+            batch = test_data.iloc[start_idx:end_idx]
+            image_paths = batch.iloc[:, 0].tolist()
+            true_captions = batch.iloc[:, 1].tolist()
 
-        for i in range(len(test_data)):
             for temp in np.linspace(0.5, 1.5, 5):
                 for det in [True, False]:
-                    test = test_data.iloc[i]
-                    test_image_path, test_image_caption = test.iloc[0], test.iloc[1]
-                    generated_caption = inference.generate_caption(
-                        test_image_path, max_tokens=500, temperature=temp, deterministic=det)
-                    rouge1, rouge2, rougeL, bleu = evaluate_model_generator(
-                        test_image_caption, generated_caption)
+                    generated_captions = inference.generate_caption_batch(
+                        image_paths, max_tokens=500, temperature=temp, deterministic=det)
 
-                    new_row = pd.DataFrame(
-                        [[test_image_path, test_image_caption, generated_caption,
-                          rouge1, rouge2, rougeL, bleu, temp, det]],
-                        columns=['image_path', 'True Caption', 'Generated caption',
-                                 'rouge1', 'rouge2', 'rougeL', 'bleu',
-                                 'temperature', 'deterministic']
-                    )
-                    self.metrics = pd.concat(
-                        [self.metrics, new_row], ignore_index=True)
-                    self.metrics.to_csv(
-                        inference_config.metrics_path, index=False, sep=';')
+                    for i, (test_image_path, test_image_caption, generated_caption) in enumerate(zip(image_paths, true_captions, generated_captions)):
+                        rouge1, rouge2, rougeL, bleu = evaluate_model_generator(
+                            test_image_caption, generated_caption)
+                        self.metrics.loc[i] = [test_image_path, test_image_caption, generated_caption, rouge1, rouge2, rougeL, bleu, temp, det]
+                        
+            self.metrics.to_csv(
+                inference_config.metrics_path, index=False, sep=';')
+            logger.info("Batch processed and metrics updated.")
 
-        logger.info(
-            "Inference metrics saved successfully at {inference_config.metrics_path}")
+        logger.info("Inference pipeline completed successfully.")

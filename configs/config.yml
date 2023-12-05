@@ -15,7 +15,7 @@ ROCO_data_processing_config:
 model_config:
   vocab_size: 50257
   embed_dim: 768
-  num_heads: 12
+  num_heads: 16
   seq_len: 1024
   depth: 12
   attention_dropout: 0.1
@@ -26,12 +26,12 @@ model_config:
 
 train_config:
   training_params:
-    epochs: 1
+    epochs: 20
     learning_rate: 0.0001
     device: cuda
-    batch_size: 4
-    freeze_epochs_gpt: 1
-    freeze_epochs_all: 2
+    batch_size: 8
+    freeze_epochs_gpt: 2
+    freeze_epochs_all: 3
     general_specific_fine_tuning: True
 
   ChestXray:

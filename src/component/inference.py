@@ -59,3 +59,31 @@ class Inference:
             caption.numpy(), skip_special_tokens=True)
 
         return caption
+
+    @torch.no_grad()
+    def generate_caption_batch(self, image_paths, max_tokens=50, temperature=1.0, deterministic=False):
+        if isinstance(image_paths, str):
+            image_paths = [image_paths]
+
+        batch_images = []
+        for image_path in image_paths:
+            image = Image.open(image_path).convert('RGB')
+            image = np.array(image)
+            transformed_image = self.gen_tfms(image=image)['image']
+            batch_images.append(transformed_image)
+
+        batch_images_tensor = torch.stack(batch_images).to(self.device)
+        batch_size = len(batch_images_tensor)
+        sequence = torch.ones(batch_size, 1).to(self.device).long() * self.tokenizer.bos_token_id
+
+        captions = self.model.generate(
+            batch_images_tensor,
+            sequence,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            deterministic=deterministic
+        )
+
+        decoded_captions = [self.tokenizer.decode(caption, skip_special_tokens=True) for caption in captions]
+        return decoded_captions
+    

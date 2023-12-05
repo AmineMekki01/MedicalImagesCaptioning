@@ -159,7 +159,12 @@ def evaluate_model_generator(reference_caption, generated_caption):
     except Exception as e:
         logger.error(e)
         bleu_score = 0
-
+        
+    # multiply by 100 and round to 2 decimal places
+    rouge1 = round(rouge1 * 100, 2)
+    rouge2 = round(rouge2 * 100, 2)
+    rougeL = round(rougeL * 100, 2)
+    bleu_score = round(bleu_score * 100, 2) 
     return rouge1, rouge2, rougeL, bleu_score
 
 

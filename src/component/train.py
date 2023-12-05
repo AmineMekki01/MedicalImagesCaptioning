@@ -70,17 +70,30 @@ class Trainer:
             ToTensorV2()
         ])
 
-    def save_model(self, model_path_output=None):
+    def save_checkpoint(self, model_path_output=None, epoch=None, best_pxp=None, best_epoch=None):
         if model_path_output is None:
             model_path_output = self.model_output_path
-        sd = self.model.state_dict()
-        torch.save(sd, model_path_output)
+        checkpoint = {
+            'epoch': epoch,
+            'best_pxp': best_pxp,
+            'best_epoch': best_epoch,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optim.state_dict(),
+            'scheduler_state_dict': self.sched.state_dict(),
+        }
+        torch.save(checkpoint, model_path_output)
 
-    def load_best_model(self, model_path_output=None):
+
+    def load_checkpoint(self, model_path_output=None):
         if model_path_output is None:
             model_path_output = self.model_output_path
-        sd = torch.load(model_path_output)
-        self.model.load_state_dict(sd)
+        checkpoint = torch.load(model_path_output)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optim.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.sched.load_state_dict(checkpoint['scheduler_state_dict'])
+        return checkpoint['epoch'], checkpoint['best_pxp'], checkpoint['best_epoch']
+
+
 
     def train_one_epoch(self, epoch):
 
@@ -148,13 +161,15 @@ class Trainer:
         gc.collect()
         torch.cuda.empty_cache()
 
-    def fit(self,):
+    def fit(self, resume):
 
-        best_pxp = 1e9
-        best_epoch = -1
+        start_epoch, best_pxp, best_epoch = 0, 1e9, -1
         prog = tqdm(range(self.train_config.epochs))
+        
+        if resume:
+            start_epoch, best_pxp, best_epoch = self.load_checkpoint()
 
-        for epoch in prog:
+        for epoch in range(start_epoch, self.train_config.epochs):
             print("doing epoch", epoch)
             if epoch == self.train_config.freeze_epochs_gpt:
                 self.model.unfreeze_gpt_layers()
@@ -179,7 +194,7 @@ class Trainer:
                 best_pxp = pxp
                 best_epoch = epoch
                 print('saving best model...')
-                self.save_model(self.model_output_path)
+                self.save_checkpoint(self.model_output_path, epoch=epoch, best_pxp=best_pxp, best_epoch=best_epoch)
 
         return {
             'best_perplexity': best_pxp,

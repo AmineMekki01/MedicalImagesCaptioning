@@ -28,8 +28,8 @@ class ModelTrainingPipeline:
 
         trainer = Trainer(self.model_config, self.training_config, './artifacts/models/first_stage_model.pth',
                           (train_dataloader, validation_dataloader), use_pretrained=True, fine_tune=True)
-        trainer.fit()
-        trainer.save_model('./artifacts/models/first_stage_model.pth')
+        trainer.fit(resume=False)
+        trainer.save_checkpoint('./artifacts/models/first_stage_model.pth')
         metrics = trainer.metrics
         metrics.to_csv(self.ROCO_training_config.metrics_path,
                        index=False, sep=';')
@@ -50,8 +50,8 @@ class ModelTrainingPipeline:
                           (train_dataloader, validation_dataloader), use_pretrained=True, fine_tune=True)
 
         trainer.load_best_model('./artifacts/models/first_stage_model.pth')
-        trainer.fit()
-        trainer.save_model('./artifacts/models/second_stage_model.pth')
+        trainer.fit(resume=False)
+        trainer.save_checkpoint('./artifacts/models/second_stage_model.pth')
         metrics = trainer.metrics
         metrics.to_csv(
             self.ChestXray_training_config.metrics_path, index=False, sep=';')
@@ -71,8 +71,8 @@ class ModelTrainingPipeline:
 
         trainer = Trainer(self.model_config, self.training_config, './artifacts/models/ChestXray_model.pth',
                           (train_dataloader, validation_dataloader), use_pretrained=True, fine_tune=False)
-        trainer.fit()
-        trainer.save_model('./artifacts/models/ChestXray_model.pth')
+        trainer.fit(resume=False)
+        trainer.save_checkpoint('./artifacts/models/ChestXray_model.pth')
         metrics = trainer.metrics
         metrics.to_csv(
             self.ChestXray_training_config.metrics_path, index=False, sep=';')

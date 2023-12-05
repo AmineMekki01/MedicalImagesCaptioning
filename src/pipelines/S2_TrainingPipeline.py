@@ -49,7 +49,7 @@ class ModelTrainingPipeline:
         trainer = Trainer(self.model_config, self.training_config, './artifacts/models/second_stage_model.pth',
                           (train_dataloader, validation_dataloader), use_pretrained=True, fine_tune=True)
 
-        trainer.load_best_model('./artifacts/models/first_stage_model.pth')
+        trainer.load_checkpoint('./artifacts/models/first_stage_model.pth')
         trainer.fit(resume=False)
         trainer.save_checkpoint('./artifacts/models/second_stage_model.pth')
         metrics = trainer.metrics

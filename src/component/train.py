@@ -57,7 +57,7 @@ class Trainer:
             steps_per_epoch=total_steps
         )
 
-#         self.sched = get_linear_schedule_with_warmup(self.optim,num_warmup_steps=0,num_training_steps=total_steps)
+        self.sched = get_linear_schedule_with_warmup(self.optim,num_warmup_steps=0,num_training_steps=total_steps)
 
         self.metrics = pd.DataFrame()
         self.metrics[['train_loss', 'train_perplexity',

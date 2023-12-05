@@ -130,21 +130,30 @@ class GPT2MLP(nn.Module):
         return x
 
 
+
+
+
 class GPT2Block(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, num_cross_attention_layers=1):
         super().__init__()
         self.embed_dim = config.embed_dim
         self.ln_1 = nn.LayerNorm(self.embed_dim)
         self.attn = GPT2Attention(config)
         self.ln_2 = nn.LayerNorm(self.embed_dim)
+        self.cross_attn_layers = nn.ModuleList([
+            GPT2CrossAttention(config) for _ in range(num_cross_attention_layers)
+        ])
+        self.ln_cross_attn = nn.ModuleList([
+            nn.LayerNorm(self.embed_dim) for _ in range(num_cross_attention_layers)
+        ])
         self.mlp = GPT2MLP(config)
         self.ln_3 = nn.LayerNorm(self.embed_dim)
-        self.cross_attn = GPT2CrossAttention(config)
 
     def forward(self, x, enc_out):
-        x = x+self.attn(self.ln_1(x))
-        x = x+self.cross_attn(self.ln_2(x), enc_out, enc_out)
-        x = x+self.mlp(self.ln_3(x))
+        x = x + self.attn(self.ln_1(x))
+        for cross_attn, ln in zip(self.cross_attn_layers, self.ln_cross_attn):
+            x = x + cross_attn(ln(x), enc_out, enc_out)
+        x = x + self.mlp(self.ln_3(x))
         return x
 
 
@@ -288,16 +297,22 @@ class VisionGPT2Model(nn.Module):
         return lm_logits
 
     def generate(self, image, sequence, max_tokens=50, temperature=1.0, deterministic=False):
+        batch_size = sequence.shape[0]
+        generated = sequence
         for _ in range(max_tokens):
-            out = self(image, sequence)
+            out = self(image, generated)
             out = out[:, -1, :] / temperature
             probs = F.softmax(out, dim=-1)
             if deterministic:
                 next_token = torch.argmax(probs, dim=-1, keepdim=True)
             else:
                 next_token = torch.multinomial(probs, num_samples=1)
-            sequence = torch.cat([sequence, next_token], dim=1)
-            if next_token.item() == self.tokenizer.eos_token_id:
+            generated = torch.cat([generated, next_token], dim=1)
+
+            # Check if all sequences in the batch have reached EOS
+            eos_reached = (next_token == self.tokenizer.eos_token_id).view(-1)
+            if eos_reached.all():
                 break
 
-        return sequence.cpu().flatten()
+        return generated.cpu()
+

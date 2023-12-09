@@ -1,8 +1,8 @@
 """
-Script name : __init__.py
-Date : 08/31/2023
-
-Description : This script is used to initialize the logger for the project.
+Script :
+    __init__.py
+Description : 
+    This script is used to initialize the logger for the project.
 """
 import os
 import sys

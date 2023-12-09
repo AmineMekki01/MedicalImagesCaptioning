@@ -23,6 +23,8 @@ model_config:
   mlp_ratio: 4
   mlp_dropout: 0.1
   emb_dropout: 0.1
+  fine_tune: True
+  encoder_type: resnet50 #resnet50
 
 train_config:
   training_params:

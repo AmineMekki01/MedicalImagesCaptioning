@@ -1,13 +1,54 @@
-from src.constants import *
-from src.utils.commonFunctions import read_yaml, create_directories
+"""
+Script : 
+    configuration.py
 
-from src.entity.configEntity import ChestXrayDataProcessingConfig, ROCODataProcessingConfig, TrainingConfig, ChestXrayTrainingConfig, ROCOTrainingConfig, ModelConfig, InferenceConfig
+Description :
+    The 'configuration.py' module in this project serves as a central point for managing and setting up configurations for various components of the system. It leverages a combination of custom configuration entities and utility functions to streamline the process of reading, processing, and setting up configurations for different aspects of the project, including data processing, training, model parameters, and inference. This module is critical for ensuring that all parts of the system can access consistent and well-defined configuration parameters.
+
+Classes:
+    ConfigurationManager: A class that provides methods to retrieve various configuration entities based on a YAML configuration file.
+
+Methods:
+    __init__(self, config_filepath=CONFIG_FILE_PATH): Initializes the ConfigurationManager with a path to the YAML configuration file.
+
+    get_ChestXray_data_processor_config(self) -> ChestXrayDataProcessingConfig: Retrieves and returns the configuration for processing Chest X-ray data, including paths and processing flags.
+
+    get_ROCO_data_processing_config(self) -> ROCODataProcessingConfig: Retrieves and returns the configuration for processing ROCO dataset, including raw and processed data paths and image base path.
+
+    get_training_config(self) -> [TrainingConfig, ChestXrayTrainingConfig, ROCOTrainingConfig]: Retrieves and returns the training configuration which includes general training parameters as well as specific configurations for Chest X-ray and ROCO datasets.
+
+    get_model_config(self) -> ModelConfig: Retrieves and returns the configuration for the model, including parameters like vocabulary size, embedding dimensions, and attention mechanisms.
+
+    get_inference_config(self) -> InferenceConfig: Retrieves and returns the configuration for the inference process, including paths for the trained model, inference data, and metrics.
+
+Each of these methods utilizes a combination of reading from a YAML configuration file and creating necessary directories to facilitate smooth execution of data processing, training, and inference workflows in the project.
+
+Dependencies:
+    - src.constants: Module containing constants used across the project.
+    - src.utils.commonFunctions: Module providing utility functions like reading YAML files and creating directories.
+    - src.entity.configEntity: Module containing various configuration entities for data processing, training, model, and inference.
+
+"""
+
+from src.constants import CONFIG_FILE_PATH
+from src.utils.commonFunctions import read_yaml, create_directories
+from src.entity.configEntity import (
+    ChestXrayDataProcessingConfig,
+    ROCODataProcessingConfig,
+    TrainingConfig,
+    ChestXrayTrainingConfig,
+    ROCOTrainingConfig,
+    ModelConfig,
+    InferenceConfig
+)
+from pathlib import Path
+from typing import Tuple, Union, Dict, Any
 
 
 class ConfigurationManager:
-    def __init__(self, config_filepath=CONFIG_FILE_PATH):
-        self.config = read_yaml(config_filepath)
-
+    def __init__(self, config_filepath: Path = CONFIG_FILE_PATH) -> None:
+        self.config: Dict[str, Any] = read_yaml(config_filepath)
+    
     def get_ChestXray_data_processor_config(self) -> ChestXrayDataProcessingConfig:
         config_ChestXray = self.config.ChestXray_data_processing_config
         create_directories([Path(config_ChestXray.processed_data_path)])
@@ -32,7 +73,7 @@ class ConfigurationManager:
         )
         return data_processor_config
 
-    def get_training_config(self) -> [TrainingConfig, ChestXrayTrainingConfig, ROCOTrainingConfig]:
+    def get_training_config(self) -> Union[TrainingConfig, Tuple[TrainingConfig, ChestXrayTrainingConfig, ROCOTrainingConfig]]:
         config = self.config.train_config
         create_directories(
             [Path(config.ChestXray.metrics_folder_path), Path(config.ROCO.metrics_folder_path)])
@@ -43,7 +84,7 @@ class ConfigurationManager:
             batch_size=config.training_params.batch_size,
             freeze_epochs_gpt=config.training_params.freeze_epochs_gpt,
             freeze_epochs_all=config.training_params.freeze_epochs_all,
-            general_specific_fine_tuning=config.training_params.general_specific_fine_tuning,
+            general_specific_fine_tuning=config.training_params.general_specific_fine_tuning
         )
 
         ChestXray_config = ChestXrayTrainingConfig(
@@ -91,7 +132,9 @@ class ConfigurationManager:
             residual_dropout=config.residual_dropout,
             mlp_ratio=config.mlp_ratio,
             mlp_dropout=config.mlp_dropout,
-            emb_dropout=config.emb_dropout
+            emb_dropout=config.emb_dropout,
+            fine_tune=config.fine_tune,
+            encoder_type=config.encoder_type
         )
         return model_config
 

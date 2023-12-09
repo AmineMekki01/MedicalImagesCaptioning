@@ -1,6 +1,44 @@
+"""
+Script : 
+    configEntity.py
+    
+Description :
+    This module defines a series of dataclasses that represent configuration entities for various components of a machine learning system focused on processing and analyzing medical imaging data, specifically Chest X-rays and the ROCO dataset. These configurations are crucial for setting up the data processing, training, and inference stages of the machine learning pipeline.
+
+Dataclasses:
+    ChestXrayDataProcessingConfig: Configuration for processing Chest X-ray data. 
+
+    ROCODataProcessingConfig: Configuration for processing ROCO dataset.
+
+    TrainingConfig: General training configuration.
+        Attributes: This class contain the attributes for the training configuration.
+
+    ChestXrayTrainingConfig: Training configuration specific to Chest X-ray data.
+        Attributes: 
+            [Paths for train, validation, test data, and various model and metrics-related paths]
+
+    ROCOTrainingConfig: Training configuration specific to the ROCO dataset.
+        Attributes:
+            [Paths for train, validation, test data, and various model and metrics-related paths]
+
+    ModelConfig: Configuration for the ML model.
+        Attributes: This class contain the attributes for the model configuration.
+
+    InferenceConfig: Configuration for the inference stage.
+        Attributes: This class contain the attributes for the inference configuration.
+ 
+
+Each dataclass is immutable (frozen=True), ensuring that configuration values remain constant throughout the runtime of the system. This structure provides a clear, organized, and efficient way to manage and access various configuration parameters needed across different stages of the machine learning pipeline.
+"""
+
 from dataclasses import dataclass
 from pathlib import Path
 
+# @dataclass(frozen=True)
+# class GetData:
+#     images_base_path: Path
+#     projections_path: Path
+#     reports_path: Path
 
 @dataclass(frozen=True)
 class ChestXrayDataProcessingConfig:
@@ -68,6 +106,8 @@ class ModelConfig:
     mlp_ratio: int
     mlp_dropout: float
     emb_dropout: float
+    fine_tune: bool
+    encoder_type : str
 
 
 @dataclass(frozen=True)

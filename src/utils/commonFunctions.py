@@ -246,6 +246,16 @@ def read_train_val_csv(train_csv_path: Path, val_csv_path: Path):
 def create_image_path_column(images_directory_path: Path):
     """
     list all the paths in a directory and then create a dataframe with the image path column.
+
+    Parameters  
+    ----------  
+    images_directory_path : Path    
+        The path to the images directory.   
+    
+    Returns 
+    ------- 
+    pd.DataFrame
+        The dataframe containing the image paths.   
     """
     image_paths = list(images_directory_path.glob('*.jpg'))
     image_paths = [str(path) for path in image_paths]
@@ -255,10 +265,21 @@ def create_image_path_column(images_directory_path: Path):
 
 def filter_rows_of_missing_images(data: pd.DataFrame, images_directory_path: Path):
     """
-    This function filters the rows of missing images.
+    This function filters the rows of missing images.\
+        
+    Parameters  
+    ----------  
+    data : pd.DataFrame  
+        The dataframe to filter.
+    images_directory_path : Path    
+        The path to the images directory.   
+    
+    Returns
+    ------- 
+    pd.DataFrame
+        The filtered dataframe. 
     """
     image_paths = list(images_directory_path.glob('*.jpg'))
-    logger.info(f"ahmed : {image_paths[0]}")
     image_paths = [str(path) for path in image_paths]
     data = data[data['image_path'].isin(image_paths)]
     return data

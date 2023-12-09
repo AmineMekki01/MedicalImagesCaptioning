@@ -1,7 +1,46 @@
+"""
+Script : 
+    dataPreProcessing.py
+    
+Description :
+    The 'dataPreProcessing.py' module offers a suite of functions dedicated to preprocessing data for dataset creation in machine learning models. These functions are instrumental in transforming raw data into a structured and cleaned format, suitable for training and evaluation purposes.
+
+Functions:
+    dataUploadMerge(projections_path: Path, reports_path: Path) -> pd.DataFrame:
+        Merges projection and report data into a single DataFrame. It requires paths to the projections and reports data as inputs.
+
+    create_image_caption_dict(merged_data: pd.DataFrame) -> Dict:
+        Converts a DataFrame into a dictionary mapping image filenames to their captions. It processes the 'findings' and 'impression' fields to extract meaningful captions.
+
+    cleanse_data(data: Dict, images_base_path: Path) -> Dict:
+        Cleanses the data by converting text to lowercase and filtering out short words. It returns a dictionary with processed captions and updates image paths to include the base path.
+
+    decontracted(phrase: str) -> str:
+        Expands contracted words in a given phrase (e.g., converting "won't" to "will not"). This function is used in text preprocessing to standardize the textual data.
+
+    preprocess_text(data: pd.DataFrame) -> list:
+        Performs a series of text preprocessing steps on a DataFrame's columns, including pattern removal, special character cleaning, and text normalization.
+
+    preprocessData(dataframe: pd.DataFrame, images_base_path: Path, processed_data_path: Path) -> pd.DataFrame:
+        Orchestrates the overall preprocessing of the dataset. It combines creating captions, cleansing data, and text preprocessing into a streamlined process.
+
+    convert_txt_to_csv(text_folder_path: Path, image_path_prefix: Path, output_path: Path) -> pd.DataFrame:
+        Converts text files into a CSV format, facilitating easier data handling. It processes text files containing image paths and captions, and outputs a DataFrame with the structured data.
+
+Dependencies:
+    - pandas, numpy: For data manipulation and numerical computations.
+    - re: For regular expression operations.
+    - pathlib: For handling file and directory paths.
+    - tqdm: For providing progress bars during data processing.
+    - src.logs: For logging information during the preprocessing steps.
+    - src.utils.commonFunctions: Provides utility functions like data splitting and saving.
+"""
+
+
 import pandas as pd
 import numpy as np
 import re
-from typing import Dict
+from typing import Dict, List
 from pathlib import Path
 from tqdm import tqdm
 from src.logs import logger
@@ -30,7 +69,7 @@ def dataUploadMerge(projections_path: Path, reports_path: Path) -> pd.DataFrame:
     return merged_data
 
 
-def create_image_caption_dict(merged_data: pd.DataFrame) -> Dict:
+def create_image_caption_dict(merged_data: pd.DataFrame) -> Dict[str, List[str]]:
     """
     Creates a dictionary of image filenames and their corresponding captions.
 
@@ -45,7 +84,7 @@ def create_image_caption_dict(merged_data: pd.DataFrame) -> Dict:
             A dictionary where keys are filenames and values are lists of captions.
         int: A count of entries with problematic captions.
     """
-    data = {}
+    data: Dict[str, List[str]] = {}
 
     for i in range(len(merged_data)):
         filename = merged_data.loc[i, 'filename']
@@ -69,7 +108,9 @@ def create_image_caption_dict(merged_data: pd.DataFrame) -> Dict:
     return data
 
 
-def cleanse_data(data: Dict, images_base_path: Path) -> Dict:
+def cleanse_data(data: Dict[str, List[str]], images_base_path: Path) -> pd.DataFrame:
+    cleansed_data: Dict[str, List[str]] = {}
+
     """
     Cleanses the data by converting strings to lowercase and removing short words.
 
@@ -136,7 +177,7 @@ def decontracted(phrase: str) -> str:
     return phrase
 
 
-def preprocess_text(data: pd.DataFrame):
+def preprocess_text(data: pd.DataFrame) -> List[str]:
     """
     Extracts the information from the data and does text preprocessing on them.
 
@@ -151,7 +192,7 @@ def preprocess_text(data: pd.DataFrame):
         A list of preprocessed sentences.   
 
     """
-    preprocessed = []
+    preprocessed: List[str] = []
 
     for sentence in tqdm(data.values):
         # Removing patterns like "1."
@@ -266,7 +307,6 @@ def convert_txt_to_csv(text_folder_path: Path, image_path_prefix: Path, output_p
 
         df = pd.DataFrame(test_final_lines, columns=[
                           'image_path', 'image_caption'])
-        logger.info(f"amine : {image_path_prefix}")
         df_filtered = filter_rows_of_missing_images(df, image_path_prefix)
 
         if "train" in str(text_file_path):

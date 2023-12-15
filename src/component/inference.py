@@ -42,7 +42,7 @@ from transformers import GPT2TokenizerFast
 from src.component.vitGPT2Model import VisionGPT2Model
 from src.component.resnetGPT2Model import ResnetGPT2Model
 from typing import Any, List, Optional
-
+from src.logs import logger
 
 class Inference:
     def __init__(self, model_config: Any, inference_config: Any) -> None:
@@ -71,6 +71,7 @@ class Inference:
             self.model = VisionGPT2Model(self.model_config)
         model_path = str(self.inference_config.trained_model_path)
         model_path = model_path.replace('.pth', f'_{self.model_config.encoder_type}.pth')
+        logger.info(f'Loading model from {model_path}')
         
         self.model.load_state_dict(torch.load(
             model_path, map_location=torch.device(self.device)))
@@ -151,8 +152,8 @@ class Inference:
         sequence = torch.ones(batch_size, 1).to(self.device).long() * self.tokenizer.bos_token_id
 
         captions = self.model.generate(
-            batch_images_tensor,
-            sequence,
+            image=batch_images_tensor,
+            sequence=sequence,
             max_tokens=max_tokens,
             temperature=temperature,
             deterministic=deterministic

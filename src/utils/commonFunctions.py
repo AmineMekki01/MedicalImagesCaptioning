@@ -18,6 +18,9 @@ from sklearn.model_selection import train_test_split
 # from pycocoevalcap.spice.spice import Spice
 from pycocoevalcap.cider.cider import Cider
 from rouge import Rouge
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from transformers import GPT2Tokenizer
 import nltk
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from nltk import word_tokenize
@@ -159,13 +162,21 @@ def evaluate_model_generator(reference_caption, generated_caption):
     except Exception as e:
         logger.error(e)
         bleu_score = 0
+    
+    try:
+        cider_score = compute_cider_gpt2(reference_caption, generated_caption)
+        print(cider_score)
+    except Exception as e:  
+        logger.error(e)
+        cider_score = 0 
         
+    
     # multiply by 100 and round to 2 decimal places
     rouge1 = round(rouge1 * 100, 2)
     rouge2 = round(rouge2 * 100, 2)
     rougeL = round(rougeL * 100, 2)
     bleu_score = round(bleu_score * 100, 2) 
-    return rouge1, rouge2, rougeL, bleu_score
+    return rouge1, rouge2, rougeL, bleu_score, cider_score
 
 
 def calculate_rouge_score(reference_caption: str, generated_caption: str):
@@ -185,14 +196,14 @@ def calculate_rouge_score(reference_caption: str, generated_caption: str):
         ROUGE-1, ROUGE-2 and ROUGE-L scores. 
     """
     rouge = Rouge()
-    rouge_scores = rouge.get_scores(generated_caption, reference_caption)
+    rouge_scores = rouge.get_scores(hyps=generated_caption, refs=reference_caption)
     rouge1 = rouge_scores[0]['rouge-1']['f']
     rouge2 = rouge_scores[0]['rouge-2']['f']
     rougeL = rouge_scores[0]['rouge-l']['f']
     return rouge1, rouge2, rougeL
 
 
-def calculate_blue_score(generated_caption: str, reference_caption: str):
+def calculate_blue_score(reference_caption: str,  generated_caption: str):
     """
     Calculate the BLEU score for a given generated caption and reference caption.   
 
@@ -213,13 +224,39 @@ def calculate_blue_score(generated_caption: str, reference_caption: str):
     chencherry = SmoothingFunction()
 
     blue_score = sentence_bleu(
-        [reference_tokens], generated_tokens, smoothing_function=chencherry.method1)
+        references=[reference_tokens], hypothesis=         generated_tokens, smoothing_function=chencherry.method1)
 
     return blue_score
 
 
-def calculate_bert_score():
-    pass
+def gpt2_tokenize(captions):
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    return [" ".join(tokenizer.tokenize(caption)) for caption in captions]
+
+def compute_cider_gpt2(reference_captions , generated_caption):
+    reference_captions = [reference_captions]
+    generated_caption = [generated_caption]
+    
+    vectorizer = TfidfVectorizer()
+
+    # Tokenize captions using GPT-2
+    tokenized_candidates = gpt2_tokenize(generated_caption)
+    tokenized_references = gpt2_tokenize(reference_captions)
+
+    # Combine tokenized candidate and reference captions
+    combined_captions = tokenized_candidates + tokenized_references
+
+    # Compute TF-IDF matrix
+    tfidf_matrix = vectorizer.fit_transform(combined_captions)
+
+    # Compute cosine similarity
+    cos_similarities = cosine_similarity(tfidf_matrix[:len(tokenized_candidates)], tfidf_matrix[len(tokenized_candidates):])
+
+    # Average cosine similarities for each candidate caption
+    cider_scores = cos_similarities.mean(axis=1)
+
+    return cider_scores
+
 
 
 def read_train_val_csv(train_csv_path: Path, val_csv_path: Path):

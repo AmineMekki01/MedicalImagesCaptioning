@@ -2,6 +2,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from PIL import Image
+import numpy as np
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 from types import SimpleNamespace
 from src.component.model import GPT2Block
@@ -136,17 +138,50 @@ class ResnetGPT2Model(nn.Module):
         lm_logits = self.lm_head(input_ids[:, [-1], :])
         return lm_logits
     
-    def generate(self,image,sequence,max_tokens=50,temperature=1.0,deterministic=False):
-        for _ in range(max_tokens):
-            out = self(image,sequence)
-            out = out[:,-1,:] / temperature
-            probs = F.softmax(out,dim=-1)
-            if deterministic:
-                next_token = torch.argmax(probs,dim=-1,keepdim=True)
-            else:
-                next_token = torch.multinomial(probs,num_samples=1)
-            sequence = torch.cat([sequence,next_token],dim=1)
-            if next_token.item() == self.tokenizer.eos_token_id:
-                break
+    # import image
+    
+    @torch.no_grad()
+    def generate(self, 
+                 image: torch.Tensor, 
+                 sequence: torch.Tensor, 
+                 max_tokens: int = 50, 
+                 temperature: float = 1.0, 
+                 deterministic: bool = False
+                ) -> torch.Tensor:
+        """
+        Generate a caption for an image.    
+    
+        Parameters: 
+        ----------- 
+        image (torch.Tensor):   
+            The image tensor.   
+        sequence (torch.Tensor):    
+            The input sequence tensor.  
+        max_tokens (int):       
+            The maximum number of tokens to generate.   
+        temperature (float):        
+            The temperature for the sampling distribution.  
+        deterministic (bool):   
+            Whether to use deterministic sampling.  
             
-        return sequence.cpu().flatten()
+        Returns:    
+        --------
+        torch.Tensor:   
+            The generated caption tensor.
+        """
+        generated = sequence
+        for _ in range(max_tokens):
+            out = self(image, generated)
+            out = out[:, -1, :] / temperature
+            probs = F.softmax(out, dim=-1)
+            if deterministic:
+                next_token = torch.argmax(probs, dim=-1, keepdim=True)
+            else:
+                next_token = torch.multinomial(probs, num_samples=1)
+            generated = torch.cat([generated, next_token], dim=1)
+
+            eos_reached = (next_token == self.tokenizer.eos_token_id).view(-1)
+            if eos_reached.all():
+                break
+
+        return generated.cpu()

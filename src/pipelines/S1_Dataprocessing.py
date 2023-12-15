@@ -5,6 +5,7 @@ import yaml
 from src.component.dataPreProcessing import dataUploadMerge, preprocessData, convert_txt_to_csv
 from src.config.configuration import ConfigurationManager
 from src.logs import logger
+from src.component.getData import download_and_extract
 import os
 
 
@@ -18,6 +19,17 @@ class DataProcessingPipeline:
         pass
 
     def run(self):
+        
+        
+        # DATA_FILE_ID = '1oVpVPyH66gN4kL4lQRXcghc-ELgNHdHz'
+        # DATA_DEST_FOLDER = './artifacts/data'
+        
+        # try:
+        #     logger.info(f'Downloading data from google drive')
+        #     download_and_extract(DATA_FILE_ID, DATA_DEST_FOLDER)
+        # except:  
+        #     logger.error(f'Error in {STAGE1} pipeline while downloading the data: {e}')
+            
         config = ConfigurationManager()
         ChestXray_data_processor_config = config.get_ChestXray_data_processor_config()
         merged_data = dataUploadMerge(

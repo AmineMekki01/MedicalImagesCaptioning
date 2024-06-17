@@ -1,3 +1,20 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:424c0f6f26469f1ee38354567c4c9d66ef03ca59ae68e2917e3ba54f66e58a10
-size 306
+ensure==1.0.3
+albumentations==1.3.1
+nltk==3.8.1
+numpy==1.26.2
+pandas==2.1.0
+opencv-python==4.8.1.78
+pycocoevalcap==1.2
+pyzmq==25.1.1
+scikit-learn==1.3.0
+scipy==1.11.2
+transformers==4.35.2
+tqdm==4.66.1
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio==2.0.0
+timm==0.9.7
+python-box==7.1.1
+rouge==1.0.1
+reportlab
+

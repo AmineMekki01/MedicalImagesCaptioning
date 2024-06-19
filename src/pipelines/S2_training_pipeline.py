@@ -2,9 +2,9 @@ import torch
 from src.logs import logger
 from src.config.configuration import ConfigurationManager
 from src.component.train import Trainer
-from src.utils.commonFunctions import read_train_val_csv
+from src.utils.common_functions import read_train_val_csv
 from src.component.dataset import Dataset, collate_fn
-from src.component.imageTransform import train_tfms, valid_tfms
+from src.component.image_transform import train_tfms, valid_tfms
 
 
 class ModelTrainingPipeline:

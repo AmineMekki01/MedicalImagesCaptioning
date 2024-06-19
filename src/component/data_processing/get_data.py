@@ -13,7 +13,17 @@ import patoolib
 
 
 
-def download_file_from_google_drive(id, destination):
+def download_file_from_google_drive(id : str, destination : str) -> None:
+    """ Download file from google drive.
+    
+    Args:
+        id (str) : file id
+        destination (str) : destination path
+        
+    Returns:
+        None
+    
+    """
     URL = "https://docs.google.com/uc?export=download&confirm=1"
 
     session = requests.Session()
@@ -24,13 +34,22 @@ def download_file_from_google_drive(id, destination):
         response = session.get(URL, params=params, stream=True)
     save_response_content(response, destination)    
 
-def get_confirm_token(response):
+def get_confirm_token(response : requests.Response):
     for key, value in response.cookies.items():
         if key.startswith('download_warning'):
             return value
     return None
 
-def save_response_content(response, destination):
+def save_response_content(response : requests.Response, destination : str) -> None:
+    """ Save response content.
+    
+    Args:
+        response (requests.Response) : response
+        destination (str) : destination path
+    
+    Returns:
+        None
+    """
     CHUNK_SIZE = 32768
     total_size = int(response.headers.get('content-length', 0))
     with open(destination, "wb") as f, tqdm(
@@ -44,13 +63,31 @@ def save_response_content(response, destination):
             size = f.write(chunk)
             bar.update(size)
 
-def extract_rar(file_path, dest_path):
+def extract_rar(file_path : str, dest_path : str) -> None:
+    """ Extract rar file.
+    
+    Args:
+        file_path (str) : file path
+        dest_path (str) : destination path
+        
+    Returns:
+        None
+    """
     try:
         patoolib.extract_archive(file_path, outdir=dest_path)
     except patoolib.util.PatoolError as e:
         print(f"Extraction failed: {e}")
 
-def download_and_extract(file_id, dest_folder):
+def download_and_extract(file_id : str, dest_folder : str) -> None:
+    """ Download and extract file.
+    
+    Args:
+        file_id (str) : file id
+        dest_folder (str) : destination folder
+    
+    Returns:
+        None
+    """
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
         

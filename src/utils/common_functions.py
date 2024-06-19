@@ -32,21 +32,13 @@ except LookupError:
 
 @ensure_annotations
 def read_yaml(path_to_yaml: Path) -> ConfigBox:
-    """
-    This function reads a yaml file and returns a ConfigBox object. 
-
-    Parameters
-    ----------
-    path_to_yaml : Path
-        path to yaml file.
-
-    Raises:
-        ValueError: if yaml file is empty.
-        e: if any other error occurs.
-
+    """ Read yaml file and return a ConfigBox object.
+    
+    Args:
+        path_to_yaml (Path): Path to the yaml file.
+        
     Returns:
-    -------
-        ConfigBox : ConfigBox object.
+        ConfigBox: A ConfigBox object containing the yaml file content.
     """
     try:
         with open(path_to_yaml, "r") as yaml_file:
@@ -62,20 +54,7 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
 
 @ensure_annotations
 def create_directories(path_to_directories: list, verbose: bool = True):
-    """
-    This function creates directories if they dont exist.
-
-    Parameters
-    ----------
-    path_to_directories : list
-        list of paths to directories.   
-    verbose : bool, optional
-        if True, print the created directories, by default True 
-
-    Returns
-    -------
-    None
-    """
+    """ Create Directories. """
     for path in path_to_directories:
         os.makedirs(path, exist_ok=True)
         if verbose:
@@ -83,23 +62,17 @@ def create_directories(path_to_directories: list, verbose: bool = True):
 
 
 @ensure_annotations
-def split_data(data: pd.DataFrame, validation_size: float = 0.1, test_size: float = 0.1, random_state: int = 42):
-    """
-    This function splits data into train and test sets.
-
-    Parameters
-    ----------
-    data : list
-        list of data to split.
-    train_size : float, optional
-        train set size, by default 0.8
-    random_state : int, optional
-        random state, by default 42
-
-    Returns
-    -------
-    train, test : list, list
-        train and test sets.
+def split_data(data: pd.DataFrame, validation_size: float = 0.1, test_size: float = 0.1, random_state: int = 42) -> tuple:
+    """ Split the data into train, validation and test sets.
+    
+    Args:
+        data (pd.DataFrame): The data to split.
+        validation_size (float): The size of the validation set.
+        test_size (float): The size of the test set.
+        random_state (int): The random state for reproducibility.
+    
+    Returns:
+        Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: The train, validation, and test sets.
     """
     train, test = train_test_split(
         data, test_size=test_size, random_state=random_state)
@@ -108,22 +81,17 @@ def split_data(data: pd.DataFrame, validation_size: float = 0.1, test_size: floa
     return train, validation, test
 
 
-def save_splitted_data(train: pd.DataFrame, validation: pd.DataFrame, test: pd.DataFrame, processed_data_path: Path):
-    """
-    This function saves the splitted data into csv files.
-
-    Parameters
-    ----------
-    train : pd.DataFrame
-        train set.
-    validation : pd.DataFrame
-        validation set.
-    test : pd.DataFrame
-        test set.
-
-    Returns
-    -------
-    None
+def save_splitted_data(train: pd.DataFrame, validation: pd.DataFrame, test: pd.DataFrame, processed_data_path: Path) -> None:
+    """ Save the splitted data into csv files.
+    
+    Args:
+        train (pd.DataFrame): The training set.
+        validation (pd.DataFrame): The validation set.
+        test (pd.DataFrame): The test set.
+        processed_data_path (Path): The path to save the splitted data.
+    
+    Returns:
+        None
     """
     logger.info(f"amine : {processed_data_path}")
     train_path = processed_data_path / "train.csv"
@@ -135,21 +103,15 @@ def save_splitted_data(train: pd.DataFrame, validation: pd.DataFrame, test: pd.D
     logger.info("data splitted successfully.")
 
 
-def evaluate_model_generator(reference_caption, generated_caption):
-    """
-    This function evaluates the model using the generated caption and the reference caption.
-
-    Parameters
-    ----------
-    reference_caption : string
-        reference caption.  
-    generated_caption : string  
-        generated caption.
-
-    Returns 
-    -------
-    cider_score, rouge1, rouge2, rougeL, bleu : float, float, float, float, float
-        cider score, rouge1 score, rouge2 score, rougeL score and bleu score.
+def evaluate_model_generator(reference_caption, generated_caption) -> tuple:
+    """ Evaluate the generated caption using Rouge and BLEU scores.
+    
+    Args:
+        reference_caption (str): The reference caption.
+        generated_caption (str): The generated caption.
+    
+    Returns:
+        tuple: The Rouge1, Rouge2, RougeL, BLEU scores.
     """
     try:
         rouge1, rouge2, rougeL = calculate_rouge_score(
@@ -170,8 +132,6 @@ def evaluate_model_generator(reference_caption, generated_caption):
         logger.error(e)
         cider_score = 0 
         
-    
-    # multiply by 100 and round to 2 decimal places
     rouge1 = round(rouge1 * 100, 2)
     rouge2 = round(rouge2 * 100, 2)
     rougeL = round(rougeL * 100, 2)
@@ -180,20 +140,14 @@ def evaluate_model_generator(reference_caption, generated_caption):
 
 
 def calculate_rouge_score(reference_caption: str, generated_caption: str):
-    """ 
-    Calculate the ROUGE score for a given generated caption and reference caption.  
-
-    Parameters  
-    ----------  
-    reference_caption : str  
-        Reference caption.  
-    generated_caption : str 
-        Generated caption.
-
-    Returns 
-    ------- 
-    rouge1, rouge2, rougeL : float, float, float 
-        ROUGE-1, ROUGE-2 and ROUGE-L scores. 
+    """ Calculate the Rouge scores for the generated caption.
+    
+    Args:
+        reference_caption (str): The reference caption.
+        generated_caption (str): The generated caption.
+    
+    Returns:
+        tuple: The Rouge1, Rouge2, RougeL scores.
     """
     rouge = Rouge()
     rouge_scores = rouge.get_scores(hyps=generated_caption, refs=reference_caption)
@@ -203,21 +157,15 @@ def calculate_rouge_score(reference_caption: str, generated_caption: str):
     return rouge1, rouge2, rougeL
 
 
-def calculate_blue_score(reference_caption: str,  generated_caption: str):
-    """
-    Calculate the BLEU score for a given generated caption and reference caption.   
-
-    Parameters  
-    ----------  
-    generated_caption : str  
-        Generated caption.  
-    reference_caption : str 
-        Reference caption.
-
-    Returns 
-    ------- 
-    float 
-        BLEU score. 
+def calculate_blue_score(reference_caption: str,  generated_caption: str) -> float:
+    """ Calculate the BLEU score for the generated caption.
+    
+    Args:
+        reference_caption (str): The reference caption.
+        generated_caption (str): The generated caption.
+    
+    Returns:
+        float: The BLEU score.
     """
     generated_tokens = word_tokenize(generated_caption.lower())
     reference_tokens = word_tokenize(reference_caption.lower())
@@ -229,92 +177,83 @@ def calculate_blue_score(reference_caption: str,  generated_caption: str):
     return blue_score
 
 
-def gpt2_tokenize(captions):
+def gpt2_tokenize(captions) -> list:
+    """ Tokenize the captions using GPT-2 tokenizer.
+
+    Args:
+        captions (List[str]): The captions to tokenize.
+    
+    Returns:
+        List[str]: The tokenized captions.
+    """
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
     return [" ".join(tokenizer.tokenize(caption)) for caption in captions]
 
-def compute_cider_gpt2(reference_captions , generated_caption):
+def compute_cider_gpt2(reference_captions : str, generated_caption : str) -> float:
+    """ Compute the CIDEr score for the generated caption.
+    
+    Args:
+        reference_captions (List[str]): The reference captions.
+        generated_caption (str): The generated caption.
+    
+    Returns:
+        float: The CIDEr score.
+    """
     reference_captions = [reference_captions]
     generated_caption = [generated_caption]
     
     vectorizer = TfidfVectorizer()
 
-    # Tokenize captions using GPT-2
     tokenized_candidates = gpt2_tokenize(generated_caption)
     tokenized_references = gpt2_tokenize(reference_captions)
 
-    # Combine tokenized candidate and reference captions
     combined_captions = tokenized_candidates + tokenized_references
-
-    # Compute TF-IDF matrix
     tfidf_matrix = vectorizer.fit_transform(combined_captions)
-
-    # Compute cosine similarity
     cos_similarities = cosine_similarity(tfidf_matrix[:len(tokenized_candidates)], tfidf_matrix[len(tokenized_candidates):])
-
-    # Average cosine similarities for each candidate caption
     cider_scores = cos_similarities.mean(axis=1)
-
     return cider_scores
 
 
 
-def read_train_val_csv(train_csv_path: Path, val_csv_path: Path):
-    """
-    This function reads the train and validation csv files.
-
-    Parameters
-    ----------
-    train_csv_path : Path
-        path to the train csv file.
-    val_csv_path : Path
-        path to the validation csv file.
-
-    Returns
-    -------
-    train, validation : pd.DataFrame, pd.DataFrame
-        train and validation dataframes.
+def read_train_val_csv(train_csv_path: Path, val_csv_path: Path) -> tuple:
+    """ Read the train and validation csv files.
+    
+    Args:
+        train_csv_path (Path): The path to the train csv file.
+        val_csv_path (Path): The path to the validation csv file.
+    
+    Returns:
+        tuple: The train and validation dataframes.
     """
     train = pd.read_csv(train_csv_path, sep=';')
     validation = pd.read_csv(val_csv_path, sep=';')
     return train, validation
 
 
-def create_image_path_column(images_directory_path: Path):
-    """
-    list all the paths in a directory and then create a dataframe with the image path column.
-
-    Parameters  
-    ----------  
-    images_directory_path : Path    
-        The path to the images directory.   
+def create_image_path_column(images_directory_path: Path) -> pd.DataFrame:
+    """ Create a dataframe containing the image paths.
     
-    Returns 
-    ------- 
-    pd.DataFrame
-        The dataframe containing the image paths.   
+    Args:
+        images_directory_path (Path): The path to the images directory.
+    
+    Returns:
+        image_paths_df (pd.DataFrame): The dataframe containing the image paths.
     """
     image_paths = list(images_directory_path.glob('*.jpg'))
     image_paths = [str(path) for path in image_paths]
-    image_paths = pd.DataFrame(image_paths, columns=['image_path'])
-    return image_paths
+    image_paths_df = pd.DataFrame(image_paths, columns=['image_path'])
+    return image_paths_df
 
 
-def filter_rows_of_missing_images(data: pd.DataFrame, images_directory_path: Path):
-    """
-    This function filters the rows of missing images.\
-        
-    Parameters  
-    ----------  
-    data : pd.DataFrame  
-        The dataframe to filter.
-    images_directory_path : Path    
-        The path to the images directory.   
+def filter_rows_of_missing_images(data: pd.DataFrame, images_directory_path: Path) -> pd.DataFrame:
+    """ Filter the rows of the dataframe that contain missing images.
     
-    Returns
-    ------- 
-    pd.DataFrame
-        The filtered dataframe. 
+    Args:
+        data (pd.DataFrame): The dataframe to filter.
+        images_directory_path (Path): The path to the images directory.
+    
+    Returns:
+        data (pd.DataFrame): The filtered dataframe.
     """
     image_paths = list(images_directory_path.glob('*.jpg'))
     image_paths = [str(path) for path in image_paths]

@@ -2,10 +2,10 @@ from pathlib import Path
 import yaml
 
 
-from src.component.dataPreProcessing import dataUploadMerge, preprocessData, convert_txt_to_csv
+from src.component.data_processing.data_pre_processing import dataUploadMerge, preprocessData, convert_txt_to_csv
 from src.config.configuration import ConfigurationManager
 from src.logs import logger
-from src.component.getData import download_and_extract
+from src.component.data_processing.get_data import download_and_extract
 import os
 
 

@@ -32,6 +32,7 @@ Dependencies:
     - src.component.model: Contains the VisionGPT2Model.
     - src.logs: Logging module for tracking inference progress.
 """
+from typing import Any, List, Optional
 
 import torch
 import numpy as np
@@ -39,9 +40,9 @@ from PIL import Image
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from transformers import GPT2TokenizerFast
-from src.component.vitGPT2Model import VisionGPT2Model
-from src.component.resnetGPT2Model import ResnetGPT2Model
-from typing import Any, List, Optional
+
+from src.component.models.vit_gpt2 import VisionGPT2Model
+from src.component.models.resnet_gpt2 import ResnetGPT2Model
 from src.logs import logger
 
 class Inference:
@@ -61,10 +62,12 @@ class Inference:
         self.load_model()
 
     def load_tokenizer(self) -> None:
+        """ Load the GPT2TokenizerFast tokenizer from HuggingFace and set the pad token to the end-of-sequence token. """
         self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def load_model(self) -> None:
+        """ Load the trained VisionGPT2Model from the specified path in the inference configuration and set it to evaluation mode."""
         if self.model_config.encoder_type == 'resnet50':
             self.model = ResnetGPT2Model(self.model_config)
         elif self.model_config.encoder_type == 'gpt2':    
@@ -80,22 +83,16 @@ class Inference:
 
     @torch.no_grad()
     def generate_caption(self, image: str, max_tokens: int = 50, temperature: float = 1.0, deterministic: bool = False) -> str:
-        """
-        Generate a caption for a single image.
+        """ Generate a caption for a single image.
         
-        Parameters:
-        ----------- 
-        image (str): 
-            The path to the image.  
-        max_tokens (int):   
-            The maximum number of tokens to generate.   
-        temperature (float):    
-            The temperature for the sampling distribution.  
+        Args:
+            image (str): The path to the image.
+            max_tokens (int): The maximum number of tokens to generate.
+            temperature (float): The temperature for the sampling distribution.
+            deterministic (bool): Whether to use deterministic sampling or not.
         
-        Returns:    
-        --------    
-        str: 
-            The generated caption decoded.  
+        Returns:
+            str: The generated caption.
         """
         image = Image.open(image).convert('RGB')
         image = np.array(image)
@@ -118,24 +115,16 @@ class Inference:
 
     @torch.no_grad()
     def generate_caption_batch(self, image_paths: List[str], max_tokens: int = 50, temperature: float = 1.0, deterministic: bool = False) -> List[str]:
-        """
-        Generate captions for a batch of images.
+        """ Generate captions for a batch of images.
         
-        Parameters:
-        ----------- 
-        image_paths (list): 
-            A list of image paths.
-        max_tokens (int):   
-            The maximum number of tokens to generate.   
-        temperature (float):    
-            The temperature for the sampling distribution.  
-        deterministic (bool):   
-            Whether to use deterministic sampling or not.   
+        Args:
+            image_paths (List[str]): List of image paths.
+            max_tokens (int): The maximum number of tokens to generate.
+            temperature (float): The temperature for the sampling distribution.
+            deterministic (bool): Whether to use deterministic sampling or not.
         
-        Returns:    
-        --------    
-        list: 
-            A list of generated captions decoded.
+        Returns:
+            List[str]: List of generated captions.
         """
         if isinstance(image_paths, str):
             image_paths = [image_paths]

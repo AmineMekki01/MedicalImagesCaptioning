@@ -2,16 +2,16 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from PIL import Image
-import numpy as np
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
-from types import SimpleNamespace
-from src.component.model import GPT2Block
 from torchvision.models import resnet50
 
+
+from types import SimpleNamespace
+from src.component.models.model import GPT2Block
+
 class ResnetImageEncoder(nn.Module):
-    
     def __init__(self, config: SimpleNamespace):
+        """ Initialize the ResnetImageEncoder module."""
         super(ResnetImageEncoder, self).__init__()
         self.config = config
 
@@ -36,6 +36,7 @@ class ResnetImageEncoder(nn.Module):
 
 class ResnetGPT2Model(nn.Module):
     def __init__(self, config : SimpleNamespace):
+        """ Initialize the ResnetGPT2Model module."""
         super().__init__()
         
         self.config = config
@@ -52,7 +53,15 @@ class ResnetGPT2Model(nn.Module):
         self.transformer.wte.weight = self.lm_head.weight
         self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
         
-    def pretrained_layers_trainable(self, trainable=False):
+    def pretrained_layers_trainable(self, trainable=False) -> None:
+        """ Set the pretrained layers to be trainable or frozen.
+        
+        Args:
+            trainable (bool) : Whether to set the pretrained layers to be trainable or frozen.  
+        
+        Returns:
+            None
+        """
         gpt_layers = [
             self.transformer.wte, 
             self.transformer.wpe, 
@@ -76,6 +85,7 @@ class ResnetGPT2Model(nn.Module):
         print(f'{total_frozen_params=}')
 
     def unfreeze_gpt_layers(self):
+        """ Unfreeze the GPT layers."""
         for i in range(self.config.depth):
             layers_to_unfreeze = [
                 self.transformer.h[i].ln_1, 
@@ -89,7 +99,15 @@ class ResnetGPT2Model(nn.Module):
                     p.requires_grad = True
                     
     @classmethod
-    def from_pretrained(cls, config):
+    def from_pretrained(cls, config) -> 'ResnetGPT2Model':
+        """ Load the pretrained model.
+        
+        Args:
+            config : The configuration object.
+        
+        Returns:
+            ResnetGPT2Model : The pretrained model.
+        """
         model = ResnetGPT2Model(config)
         sd = model.state_dict()
         keys = sd.keys()
@@ -117,7 +135,17 @@ class ResnetGPT2Model(nn.Module):
         return model
 
     
-    def forward(self, image, input_ids, labels=None):
+    def forward(self, image, input_ids, labels=None) -> torch.Tensor:
+        """ Forward pass for the model.
+
+        Args:
+            image (torch.Tensor): The image tensor.
+            input_ids (torch.Tensor): The input sequence tensor.
+            labels (torch.Tensor): The label tensor.
+        
+        Returns:
+            lm_logits (torch.Tensor): The logits tensor.
+        """
         image_features = self.resnet_encoder(image)
 
         token_embeddings = self.transformer.wte(input_ids) # batch x seq_len
@@ -137,9 +165,7 @@ class ResnetGPT2Model(nn.Module):
 
         lm_logits = self.lm_head(input_ids[:, [-1], :])
         return lm_logits
-    
-    # import image
-    
+        
     @torch.no_grad()
     def generate(self, 
                  image: torch.Tensor, 
@@ -148,26 +174,17 @@ class ResnetGPT2Model(nn.Module):
                  temperature: float = 1.0, 
                  deterministic: bool = False
                 ) -> torch.Tensor:
-        """
-        Generate a caption for an image.    
-    
-        Parameters: 
-        ----------- 
-        image (torch.Tensor):   
-            The image tensor.   
-        sequence (torch.Tensor):    
-            The input sequence tensor.  
-        max_tokens (int):       
-            The maximum number of tokens to generate.   
-        temperature (float):        
-            The temperature for the sampling distribution.  
-        deterministic (bool):   
-            Whether to use deterministic sampling.  
+        """ Generate captions for a given image.
+        
+        Args:
+            image (torch.Tensor): The image tensor.
+            sequence (torch.Tensor): The input sequence tensor.
+            max_tokens (int): The maximum number of tokens to generate.
+            temperature (float): The temperature value.
+            deterministic (bool): Whether to use deterministic generation.
             
-        Returns:    
-        --------
-        torch.Tensor:   
-            The generated caption tensor.
+        Returns:
+            generated (torch.Tensor): The generated caption tensor.
         """
         generated = sequence
         for _ in range(max_tokens):

@@ -45,6 +45,7 @@ from types import SimpleNamespace
 
 class GPT2Attention(nn.Module):
     def __init__(self, config: SimpleNamespace) -> None:
+        """ Initialize the GPT2Attention module."""
         super().__init__()
         self.embed_dim = config.embed_dim
         self.n_heads = config.num_heads
@@ -65,6 +66,14 @@ class GPT2Attention(nn.Module):
         self.resid_dropout = nn.Dropout(config.residual_dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """ Forward pass for the attention mechanism.
+        
+        Args:
+            x (torch.Tensor): Input tensor
+        
+        Returns:
+            out (torch.Tensor): Output tensor
+        """
         batch_size, sequence_len, feature_size = x.shape
         query, key, value = self.c_attn(x).chunk(3, dim=-1)
         query = query.view(batch_size, sequence_len, self.n_heads, self.head_size).permute(
@@ -91,6 +100,7 @@ class GPT2Attention(nn.Module):
 
 class GPT2CrossAttention(nn.Module):
     def __init__(self, config: SimpleNamespace) -> None:
+        """ Initialize the GPT2CrossAttention module."""
         super().__init__()
         self.embed_dim = config.embed_dim
         self.n_heads = config.num_heads
@@ -110,13 +120,31 @@ class GPT2CrossAttention(nn.Module):
 
         self.apply(self._init_weights)
 
-    def _init_weights(self, module):
+    def _init_weights(self, module) -> None:
+        """ Initialize weights for the module.
+        
+        Args:
+            module (nn.Module): Module to initialize weights for.
+            
+        Returns:
+            None
+        """
         if isinstance(module, nn.Linear):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
+        """ Forward pass for the cross-attention mechanism.
+        
+        Args:
+            query (torch.Tensor): Query tensor
+            key (torch.Tensor): Key tensor
+            value (torch.Tensor): Value tensor
+        
+        Returns:
+            out (torch.Tensor): Output tensor
+        """
         batch_size, sequence_len, feature_size = query.shape
 
         query = self.query(query)
@@ -145,6 +173,7 @@ class GPT2CrossAttention(nn.Module):
 
 class GPT2MLP(nn.Module):
     def __init__(self, config: SimpleNamespace) -> None:
+        """ Initialize the GPT2MLP module. """
         super().__init__()
         self.embed_dim = config.embed_dim
         self.mlp_ratio = config.mlp_ratio
@@ -156,6 +185,14 @@ class GPT2MLP(nn.Module):
         self.dropout = nn.Dropout(self.mlp_dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """ Forward pass for the MLP.
+        
+        Args:
+            x (torch.Tensor): Input tensor
+            
+        Returns:
+            x (torch.Tensor): Output tensor
+        """
         x = self.c_fc(x)
         x = self.act(x)
         x = self.c_proj(x)
@@ -164,6 +201,14 @@ class GPT2MLP(nn.Module):
 
 class GPT2Block(nn.Module):
     def __init__(self, config: SimpleNamespace) -> None:
+        """ Initialize a GPT2Block.
+        
+        Args:
+            config (SimpleNamespace): Configuration object
+        
+        Returns:
+            None
+        """
         super().__init__()
         self.embed_dim = config.embed_dim
         self.ln_1 = nn.LayerNorm(self.embed_dim)
@@ -174,6 +219,14 @@ class GPT2Block(nn.Module):
         self.cross_attn = GPT2CrossAttention(config)
 
     def forward(self, x: torch.Tensor, enc_out: torch.Tensor) -> torch.Tensor:
+        """ Forward pass for the block.
+        Args:
+            x (torch.Tensor): Input tensor
+            enc_out (torch.Tensor): Output from the encoder
+            
+        Returns:
+            x (torch.Tensor): Output tensor
+        """
         x = x+self.attn(self.ln_1(x))
         x = x+self.cross_attn(self.ln_2(x), enc_out, enc_out)
         x = x+self.mlp(self.ln_3(x))

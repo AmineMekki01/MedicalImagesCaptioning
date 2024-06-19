@@ -5,10 +5,22 @@ from transformers import GPT2LMHeadModel, GPT2TokenizerFast, GPT2Config
 from types import SimpleNamespace
 from timm import create_model
 from typing import Tuple, Union
-from src.component.model import GPT2Block
+
+
+from src.component.models.model import GPT2Block
 from src.logs import logger 
+
+
 class VisionGPT2Model(nn.Module):
     def __init__(self, config: SimpleNamespace) -> None:
+        """ Initialize the VisionGPT2Model module.
+        
+        Args:
+            config (SimpleNamespace) : Configuration object.
+            
+        Returns:
+            None
+        """
         super().__init__()
 
         self.config = config
@@ -37,23 +49,27 @@ class VisionGPT2Model(nn.Module):
         self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
 
     def _pos_embed(self, x: torch.Tensor) -> torch.Tensor:
+        """ Add positional embeddings to the input tensor.
+        
+        Args:
+            x (torch.Tensor) : Input tensor.
+        
+        Returns:
+            torch.Tensor : Output tensor.
+        """
         pos_embed = self.pos_embed
         x = torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
         x = x + pos_embed
         return self.pos_drop(x)
 
     def pretrained_layers_trainable(self, trainable: bool = False) -> None:
-        """
-        This method freezes the pretrained layers of the Vision Transformer backbone.   
-    
-        Parameters: 
-        ----------- 
-        trainable (bool):   
-            Whether to freeze the pretrained layers or not. 
+        """ Set the pretrained layers to be trainable or frozen.
         
-        Returns:    
-        --------    
-        None    
+        Args:
+            trainable (bool) : Whether to set the pretrained layers to be trainable or frozen.
+        
+        Returns:
+            None
         """
         layers = [
             self.cls_token, self.patch_embed, self.pos_embed, self.blocks,
@@ -79,9 +95,7 @@ class VisionGPT2Model(nn.Module):
         print(f'{total_frozen_params=}')
 
     def unfreeze_gpt_layers(self) -> None:
-        """
-        This method unfreezes the GPT2 layers for fine-tuning.
-        """
+        """ Unfreeze the GPT layers. """
         gpt_layers = [[
             self.transformer.h[i].ln_1, self.transformer.h[i].ln_2,
             self.transformer.h[i].attn, self.transformer.h[i].mlp
@@ -99,18 +113,13 @@ class VisionGPT2Model(nn.Module):
 
     @classmethod
     def from_pretrained(cls, config: GPT2Config) -> 'VisionGPT2Model':
-        """
-        This method loads the pretrained GPT2 model from HuggingFace and initializes the weights of the Vision Transformer backbone with the pretrained weights of the GPT2 model.
+        """ Load the pretrained model.
         
-        Parameters: 
-        -----------
-        config (GPT2Config):    
-            The GPT2Config object.  
+        Args:
+            config : The configuration object.
         
-        Returns:    
-        --------
-        VisionGPT2Model:   
-            The VisionGPT2Model object. 
+        Returns:
+            VisionGPT2Model : The pretrained model.
         """
         model = VisionGPT2Model(config)
         sd = model.state_dict()
@@ -146,22 +155,15 @@ class VisionGPT2Model(nn.Module):
                 input_ids: torch.Tensor, 
                 labels: Union[torch.Tensor, None] = None
                ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-        """
-        Forward pass of the model.
-    
-        Parameters:
-        ----------- 
-        image (torch.Tensor):   
-            The image tensor.   
-        input_ids (torch.Tensor):   
-            The input sequence tensor.
-        labels (torch.Tensor):      
-            The labels tensor.
+        """ Forward pass for the model.
+        
+        Args:
+            image (torch.Tensor): The image tensor.
+            input_ids (torch.Tensor): The input sequence tensor.
+            labels (torch.Tensor): The label tensor.
         
         Returns:
-        --------    
-        lm_logits (torch.Tensor):   
-            The logits tensor.  
+            lm_logits (torch.Tensor): The logits tensor.
         """
         image = self.patch_embed(image)
         image = self._pos_embed(image)
@@ -194,26 +196,17 @@ class VisionGPT2Model(nn.Module):
                  temperature: float = 1.0, 
                  deterministic: bool = False
                 ) -> torch.Tensor:
-        """
-        Generate a caption for an image.    
-    
-        Parameters: 
-        ----------- 
-        image (torch.Tensor):   
-            The image tensor.   
-        sequence (torch.Tensor):    
-            The input sequence tensor.  
-        max_tokens (int):       
-            The maximum number of tokens to generate.   
-        temperature (float):        
-            The temperature for the sampling distribution.  
-        deterministic (bool):   
-            Whether to use deterministic sampling.  
-            
-        Returns:    
-        --------
-        torch.Tensor:   
-            The generated caption tensor.
+        """ Generate captions for a given image.
+        
+        Args:
+            image (torch.Tensor): The image tensor.
+            sequence (torch.Tensor): The input sequence tensor.
+            max_tokens (int): The maximum number of tokens to generate.
+            temperature (float): The temperature for sampling.
+            deterministic (bool): Whether to use deterministic sampling.
+        
+        Returns:
+            generated (torch.Tensor): The generated caption tensor.
         """
         generated = sequence
         for _ in range(max_tokens):

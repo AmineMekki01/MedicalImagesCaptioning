@@ -29,10 +29,12 @@ Dependencies:
     - src.entity.configEntity: Module containing various configuration entities for data processing, training, model, and inference.
 
 """
+from pathlib import Path
+from typing import Tuple, Union, Dict, Any
 
 from src.constants import CONFIG_FILE_PATH
-from src.utils.commonFunctions import read_yaml, create_directories
-from src.entity.configEntity import (
+from src.utils.common_functions import read_yaml, create_directories
+from src.entity.config_entity import (
     ChestXrayDataProcessingConfig,
     ROCODataProcessingConfig,
     TrainingConfig,
@@ -41,8 +43,6 @@ from src.entity.configEntity import (
     ModelConfig,
     InferenceConfig
 )
-from pathlib import Path
-from typing import Tuple, Union, Dict, Any
 
 
 class ConfigurationManager:
@@ -50,6 +50,11 @@ class ConfigurationManager:
         self.config: Dict[str, Any] = read_yaml(config_filepath)
     
     def get_ChestXray_data_processor_config(self) -> ChestXrayDataProcessingConfig:
+        """ Retrieve the configuration for processing Chest X-ray data.
+        
+        Returns:
+            ChestXrayDataProcessingConfig: The configuration for processing Chest X-ray data.
+        """
         config_ChestXray = self.config.ChestXray_data_processing_config
         create_directories([Path(config_ChestXray.processed_data_path)])
         data_processor_config = ChestXrayDataProcessingConfig(
@@ -64,6 +69,11 @@ class ConfigurationManager:
         return data_processor_config
 
     def get_ROCO_data_processing_config(self) -> ROCODataProcessingConfig:
+        """ Retrieve the configuration for processing ROCO dataset.
+        
+        Returns:
+            ROCODataProcessingConfig: The configuration for processing ROCO dataset.
+        """
         config_roco = self.config.ROCO_data_processing_config
         create_directories([Path(config_roco.processed_data_path)])
         data_processor_config = ROCODataProcessingConfig(
@@ -74,6 +84,11 @@ class ConfigurationManager:
         return data_processor_config
 
     def get_training_config(self) -> Union[TrainingConfig, Tuple[TrainingConfig, ChestXrayTrainingConfig, ROCOTrainingConfig]]:
+        """ Retrieve the training configuration for the model.
+        
+        Returns:
+            Union[TrainingConfig, Tuple[TrainingConfig, ChestXrayTrainingConfig, ROCOTrainingConfig]]: The training configuration for the model.
+        """
         config = self.config.train_config
         create_directories(
             [Path(config.ChestXray.metrics_folder_path), Path(config.ROCO.metrics_folder_path)])
@@ -121,6 +136,11 @@ class ConfigurationManager:
             return training_config, ChestXray_config, ROCO_config
 
     def get_model_config(self) -> ModelConfig:
+        """ Retrieve the configuration for the model.
+        
+        Returns:
+            ModelConfig: The configuration for the model.
+        """
         config = self.config.model_config
         model_config = ModelConfig(
             vocab_size=config.vocab_size,
@@ -139,6 +159,11 @@ class ConfigurationManager:
         return model_config
 
     def get_inference_config(self) -> InferenceConfig:
+        """ Retrieve the configuration for the inference process.
+        
+        Returns:
+            InferenceConfig: The configuration for the inference process.
+        """
         config = self.config.inference_config
         create_directories([Path(config.metrics_folder_path)])
         inference_config = InferenceConfig(

@@ -43,25 +43,20 @@ import re
 from typing import Dict, List
 from pathlib import Path
 from tqdm import tqdm
+
 from src.logs import logger
-from src.utils.commonFunctions import split_data, save_splitted_data, filter_rows_of_missing_images
+from src.utils.common_functions import split_data, save_splitted_data, filter_rows_of_missing_images
 
 
 def dataUploadMerge(projections_path: Path, reports_path: Path) -> pd.DataFrame:
-    """
-    Merges the projections and reports data into a single DataFrame.
+    """ Merges the projections and reports data into a single DataFrame.
 
-    Parameters: 
-    ----------  
-    projections_path (Path):    
-        The path to the projections data.   
-    reports_path (Path):    
-        The path to the reports data.
+    Args:   
+        projections_path (Path): The path to the projections data.   
+        reports_path (Path): The path to the reports data.
 
-    Returns:    
-    ------- 
-    pd.DataFrame:   
-        A DataFrame containing the merged data.
+    Returns:
+        merged_data (pd.DataFrame): A DataFrame containing the merged data.
     """
     projections_data = pd.read_csv(projections_path)
     reports_data = pd.read_csv(reports_path)
@@ -70,19 +65,13 @@ def dataUploadMerge(projections_path: Path, reports_path: Path) -> pd.DataFrame:
 
 
 def create_image_caption_dict(merged_data: pd.DataFrame) -> Dict[str, List[str]]:
-    """
-    Creates a dictionary of image filenames and their corresponding captions.
+    """ Creates a dictionary of image filenames and their corresponding captions.
 
-    Parameters:
-    ----------
-    merged_data (pd.DataFrame):
-        A DataFrame containing the columns 'filename', 'findings', and 'impression'.
+    Args:
+        merged_data (pd.DataFrame): A DataFrame containing the columns 'filename', 'findings', and 'impression'.
 
     Returns:
-    -------
-        Dict: 
-            A dictionary where keys are filenames and values are lists of captions.
-        int: A count of entries with problematic captions.
+        data (Dict): A dictionary where keys are filenames and values are lists of captions.
     """
     data: Dict[str, List[str]] = {}
 
@@ -109,21 +98,15 @@ def create_image_caption_dict(merged_data: pd.DataFrame) -> Dict[str, List[str]]
 
 
 def cleanse_data(data: Dict[str, List[str]], images_base_path: Path) -> pd.DataFrame:
-    cleansed_data: Dict[str, List[str]] = {}
+    """ Cleanses the data by converting strings to lowercase and removing short words.
 
-    """
-    Cleanses the data by converting strings to lowercase and removing short words.
-
-    Parameters:
-    ----------
-    data (Dict): 
-        A dictionary where keys are filenames and values are lists of captions.
+    Args:
+        data (Dict): A dictionary where keys are filenames and values are lists of captions.
 
     Returns:
-    -------
-    Dict: 
-        A cleansed dictionary where each string is processed to remove short words and convert to lowercase.
+        dataframe (pd.DataFrame): A DataFrame containing the cleansed data.
     """
+    # cleansed_data: Dict[str, List[str]] = {}
     cleansed_data = {}
     for key, values in data.items():
         for value in values:
@@ -151,18 +134,13 @@ def cleanse_data(data: Dict[str, List[str]], images_base_path: Path) -> pd.DataF
 
 
 def decontracted(phrase: str) -> str:
-    """
-    Performs text decontraction of words like won't to will not.
+    """ Performs text decontraction of words like won't to will not.
 
-    Parameters: 
-    ----------
-    phrase (str): 
-        A string to be processed.   
+    Args: 
+        phrase (str): A string to be processed.   
 
     Returns:    
-    -------
-    str: 
-        A string with decontraction performed.
+        phrase (str): The processed string.
     """
     phrase = re.sub(r"won\'t", "will not", phrase)
     phrase = re.sub(r"can\'t", "can not", phrase)
@@ -178,18 +156,13 @@ def decontracted(phrase: str) -> str:
 
 
 def preprocess_text(data: pd.DataFrame) -> List[str]:
-    """
-    Extracts the information from the data and does text preprocessing on them.
+    """ Extracts the information from the data and does text preprocessing on them.
 
-    Parameters: 
-    ----------
-    data (pd.DataFrame): 
-        A DataFrame containing the columns 'filename', 'findings', and 'impression'.    
+    Args: 
+        data (pd.DataFrame): A DataFrame containing the columns 'filename', 'findings', and 'impression'.    
 
-    Returns:    
-    -------
-    list: 
-        A list of preprocessed sentences.   
+    Returns:
+        preprocessed (List[str]): A list of preprocessed sentences.   
 
     """
     preprocessed: List[str] = []
@@ -236,53 +209,39 @@ def preprocess_text(data: pd.DataFrame) -> List[str]:
 
 
 def preprocessData(dataframe: pd.DataFrame, images_base_path: Path, processed_data_path: Path) -> pd.DataFrame:
-    """
-    Preprocesses the data by extracting the information from the data and doing text preprocessing on them.
+    """ Preprocess the data by extracting the information from the data and doing text preprocessing on them.
 
-    Parameters: 
-    ----------
-    dataframe (pd.DataFrame): 
-        A DataFrame containing the columns 'filename', 'findings', and 'impression'.    
-    images_base_path (Path): 
-        The path to the images.    
+    Args: 
+        dataframe (pd.DataFrame): A DataFrame containing the columns 'filename', 'findings', and 'impression'.    
+        images_base_path (Path): The path to the images.    
 
     Returns:    
-    -------
-    pd.DataFrame: 
-        A DataFrame containing the preprocessed data.   
-
+        clean_dataframe (pd.DataFrame): A DataFrame containing the preprocessed data.
     """
     dataDict = create_image_caption_dict(dataframe)
-    dataframeCleanse = cleanse_data(dataDict, images_base_path)
-    print(dataframeCleanse.columns)
-    dataframeCleanse["image_caption"] = preprocess_text(
-        dataframeCleanse["image_caption"])
-    dataframeCleanse.dropna(inplace=True)
-    data_contains_xxxx2 = dataframeCleanse["image_caption"].str.contains(
+    clean_dataframe = cleanse_data(dataDict, images_base_path)
+    print(clean_dataframe.columns)
+    clean_dataframe["image_caption"] = preprocess_text(
+        clean_dataframe["image_caption"])
+    clean_dataframe.dropna(inplace=True)
+    data_contains_xxxx2 = clean_dataframe["image_caption"].str.contains(
         'xxxx', case=False, regex=False).any()
     logger.info(f"Data contains xxxx: {data_contains_xxxx2}")
-    train, validation, test = split_data(dataframeCleanse)
+    train, validation, test = split_data(clean_dataframe)
     save_splitted_data(train, validation, test, processed_data_path)
-    return dataframeCleanse
+    return clean_dataframe
 
 
 def convert_txt_to_csv(text_folder_path: Path, image_path_prefix: Path, output_path: Path) -> pd.DataFrame:
-    """
-    Converts a text file to a csv file.
+    """ Converts a text file to a csv file.
 
-    Parameters: 
-    ----------
-    text_file_path (Path): 
-        The path to the text file.    
-    image_path_prefix (Path): 
-        The path to the images.    
-    output_path (Path): 
-        The path to the output csv file.    
+    Args: 
+        text_file_path (Path): The path to the text file.    
+        image_path_prefix (Path): The path to the images.    
+        output_path (Path): The path to the output csv file.    
 
     Returns:    
-    -------
-    pd.DataFrame: 
-        A DataFrame containing the converted data.   
+        df_filtered (pd.DataFrame): A DataFrame containing the filtered data.    
     """
     # get all the text files
     text_files = list(text_folder_path.glob('*.txt'))

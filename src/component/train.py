@@ -54,11 +54,12 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.cuda.amp import GradScaler, autocast
 from tqdm.auto import tqdm
-from src.component.vitGPT2Model import VisionGPT2Model
-from src.component.resnetGPT2Model import ResnetGPT2Model   
-from src.logs import logger
+
 from typing import Tuple, Dict, Optional, Any
 
+from src.component.models.vit_gpt2 import VisionGPT2Model
+from src.component.models.resnet_gpt2 import ResnetGPT2Model   
+from src.logs import logger
 
 class Trainer:
     def __init__(self, model_config: Any, train_config: Any, model_output_path: str, dls: Tuple[Any, Any], use_pretrained: bool = False, fine_tune: bool = False) -> None:
@@ -119,8 +120,13 @@ class Trainer:
         ])
 
     def save_model(self, model_path_output: Optional[str] = None) -> None:
-        """
-        Saves the model to the specified path.  
+        """ Saves the trained model to the specified path. 
+        
+        Args:
+            model_path_output (str): The path to save the model.
+            
+        Returns:
+            None
         """
         if model_path_output is None:
             model_path_output = self.model_output_path
@@ -130,8 +136,13 @@ class Trainer:
         torch.save(sd, model_path_output)
 
     def load_best_model(self, model_path_output: Optional[str] = None) -> None:
-        """
-        Loads the best model from the specified path.   
+        """ Loads the best performing model from the specified path.
+        
+        Args:
+            model_path_output (str): The path to load the model.
+        
+        Returns:
+            None
         """
         if model_path_output is None:
             model_path_output = self.model_output_path
@@ -141,18 +152,13 @@ class Trainer:
         self.model.load_state_dict(sd)
 
     def train_one_epoch(self, epoch: int) -> float:
-        """
-        Trains the model for one epoch. 
-    
-        Parameters:
-        ----------- 
-        epoch (int): 
-            The current epoch.  
+        """ Trains the model for one epoch.
         
-        Returns:    
-        --------
-        float: 
-            The training loss.
+        Args:
+            epoch (int): The current epoch.
+        
+        Returns:
+            float: The training perplexity.
         """
         prog = tqdm(self.train_dl, total=len(self.train_dl))
 
@@ -187,20 +193,14 @@ class Trainer:
 
     @torch.no_grad()
     def valid_one_epoch(self, epoch: int) -> float:
-        """
-        Validates the model for one epoch.
-    
-        Parameters: 
-        ----------- 
-        epoch (int): 
-            The current epoch.  
+        """ Validates the model for one epoch.
         
-        Returns:    
-        --------    
-        float: 
-            The validation perplexity.
+        Args:
+            epoch (int): The current epoch.
+        
+        Returns:
+            float: The validation perplexity.
         """
-
         prog = tqdm(self.val_dl, total=len(self.val_dl))
 
         running_loss = 0.
@@ -228,15 +228,15 @@ class Trainer:
         return val_pxp
 
     def clean(self) -> None:
-        """
-        Cleans the GPU memory. Only 16Gb LoL.
-        """
+        """ Clears the GPU memory to optimize memory usage. """
         gc.collect()
         torch.cuda.empty_cache()
 
     def fit(self) -> Dict[str, float]:
-        """
-        Trains the model.
+        """ Executes the complete training process for the specified number of epochs.
+        
+        Returns:
+            Dict[str, float]: A dictionary containing the best perplexity and the epoch at which it occurred.
         """
         best_pxp = 1e9
         best_epoch = -1
@@ -287,27 +287,16 @@ class Trainer:
 
     @torch.no_grad()
     def generate_caption(self, image: str, max_tokens: int = 50, temperature: float = 1.0, deterministic: bool = False) -> str:
-        """
-        Generate a caption for a single image.  
-    
-        Parameters: 
-        ----------- 
-        image (str): 
-            The path to the image.  
+        """ Generates a caption for a given image using the trained model.
         
-        max_tokens (int):   
-            The maximum number of tokens to generate.   
-        
-        temperature (float):    
-            The temperature to use for the generation.  
-        
-        deterministic (bool):   
-            Whether to use deterministic sampling or not.   
+        Args:
+            image (str): The path to the image.
+            max_tokens (int): The maximum number of tokens to generate.
+            temperature (float): The temperature for the sampling distribution.
+            deterministic (bool): Whether to use deterministic sampling or not.
         
         Returns:
-        --------    
-        str: 
-            The generated caption decoded.  
+            caption (str): The generated caption.
         """
         self.model.eval()
 

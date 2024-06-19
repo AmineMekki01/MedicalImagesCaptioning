@@ -1,6 +1,6 @@
 """
 Script : 
-    configEntity.py
+    config_entity.py
     
 Description :
     This module defines a series of dataclasses that represent configuration entities for various components of a machine learning system focused on processing and analyzing medical imaging data, specifically Chest X-rays and the ROCO dataset. These configurations are crucial for setting up the data processing, training, and inference stages of the machine learning pipeline.
@@ -34,11 +34,11 @@ Each dataclass is immutable (frozen=True), ensuring that configuration values re
 from dataclasses import dataclass
 from pathlib import Path
 
-# @dataclass(frozen=True)
-# class GetData:
-#     images_base_path: Path
-#     projections_path: Path
-#     reports_path: Path
+@dataclass(frozen=True)
+class GetData:
+    images_base_path: Path
+    projections_path: Path
+    reports_path: Path
 
 @dataclass(frozen=True)
 class ChestXrayDataProcessingConfig:

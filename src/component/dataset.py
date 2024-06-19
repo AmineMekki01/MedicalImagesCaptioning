@@ -41,9 +41,20 @@ class Dataset:
         self.transformations = transformations
 
     def __len__(self) -> int:
+        """ Returns the length of the dataset. """
         return len(self.dataFrame)
     
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, List[int], List[int]]:
+        """ Retrieves an image-caption pair from the dataset at the specified index.
+        
+        Args:
+            idx (int): The index of the sample to retrieve.
+        
+        Returns:
+            image (torch.Tensor): The image tensor.
+            input_ids (List[int]): The input_ids tensor.
+            labels (List[int]): The labels tensor.
+        """
         sample = self.dataFrame.iloc[idx, :]
         image = sample['image_path']
         caption = sample['image_caption']
@@ -61,22 +72,15 @@ class Dataset:
 
 
 def collate_fn(batch: List[Tuple[torch.Tensor, List[int], List[int]]]) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """
-    Collate function for the dataloader
+    """ A custom collate function for the dataloader.
     
-    parameters:
-    -----------
-    batch: list.
-        A list of samples from the dataset.
-    
-    returns:
-    --------    
-    image: torch.Tensor.
-        The image tensor.
-    input_ids: torch.Tensor.    
-        The input_ids tensor.   
-    labels: torch.Tensor.   
-        The labels tensor. 
+    Args:
+        batch (List[Tuple[torch.Tensor, List[int], List[int]]]): A list of samples from the dataset.
+
+    Returns:
+        image (torch.Tensor): The image tensor.
+        input_ids (torch.Tensor): The input_ids tensor.
+        labels (torch.Tensor): The labels tensor.
     """
     image = [i[0] for i in batch]
     input_ids = [i[1] for i in batch]
